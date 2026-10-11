@@ -1,6 +1,29 @@
 @TravelAgency.Api_HostAddress = http://localhost:5081
 
-GET {{TravelAgency.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+### Health check
+GET {{TravelAgency.Api_HostAddress}}/health
 
-###
+### UC-06: створити бронювання (потрібні користувач Id=1 та група Id=1 у БД)
+POST {{TravelAgency.Api_HostAddress}}/api/bookings
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "tourGroupId": 1,
+  "tourists": [
+    { "fullName": "Іваненко Іван Іванович", "passport": "AB123456", "gender": "Male", "age": 35, "childrenInfo": null },
+    { "fullName": "Іваненко Марія Петрівна", "passport": "AB654321", "gender": "Female", "age": 33, "childrenInfo": null }
+  ]
+}
+
+### UC-13: підтвердити бронювання
+POST {{TravelAgency.Api_HostAddress}}/api/bookings/1/confirm
+
+### UC-10: оплатити бронювання (сума = TotalPrice з відповіді на створення)
+POST {{TravelAgency.Api_HostAddress}}/api/bookings/1/pay
+Content-Type: application/json
+
+{ "amount": 1000 }
+
+### UC-09: скасувати бронювання
+POST {{TravelAgency.Api_HostAddress}}/api/bookings/1/cancel

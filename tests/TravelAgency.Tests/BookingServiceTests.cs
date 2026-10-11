@@ -11,7 +11,7 @@ public class BookingServiceTests
     {
         using var context = TestDb.CreateContext();
         var group = await TestDb.SeedGroupAsync(context, seats: 10);
-        var service = new BookingService(new UnitOfWork(context));
+        var service = new BookingService(new UnitOfWork(context), TestDb.Encryption());
 
         var booking = await service.CreateBookingAsync(1, group.Id, TestDb.Tourists(2));
 
@@ -23,11 +23,28 @@ public class BookingServiceTests
     }
 
     [Fact]
+    public async Task CreateBooking_EncryptsPassportData()
+    {
+        using var context = TestDb.CreateContext();
+        var group = await TestDb.SeedGroupAsync(context);
+        var service = new BookingService(new UnitOfWork(context), TestDb.Encryption());
+
+        var booking = await service.CreateBookingAsync(1, group.Id, TestDb.Tourists(2));
+
+        Assert.All(booking.Tourists, t =>
+        {
+            Assert.StartsWith("enc:", t.PassportEncrypted);
+            Assert.DoesNotMatch("^AB", t.PassportEncrypted);
+        });
+        Assert.Equal(2, context.Tourists.Count());
+    }
+
+    [Fact]
     public async Task CreateBooking_NotEnoughSeats_Throws()
     {
         using var context = TestDb.CreateContext();
         var group = await TestDb.SeedGroupAsync(context, seats: 1);
-        var service = new BookingService(new UnitOfWork(context));
+        var service = new BookingService(new UnitOfWork(context), TestDb.Encryption());
 
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => service.CreateBookingAsync(1, group.Id, TestDb.Tourists(2)));
@@ -41,7 +58,7 @@ public class BookingServiceTests
     {
         using var context = TestDb.CreateContext();
         await TestDb.SeedGroupAsync(context);
-        var service = new BookingService(new UnitOfWork(context));
+        var service = new BookingService(new UnitOfWork(context), TestDb.Encryption());
 
         await Assert.ThrowsAsync<KeyNotFoundException>(
             () => service.CreateBookingAsync(1, 999, TestDb.Tourists(1)));
@@ -52,7 +69,7 @@ public class BookingServiceTests
     {
         using var context = TestDb.CreateContext();
         var group = await TestDb.SeedGroupAsync(context);
-        var service = new BookingService(new UnitOfWork(context));
+        var service = new BookingService(new UnitOfWork(context), TestDb.Encryption());
 
         await Assert.ThrowsAsync<KeyNotFoundException>(
             () => service.CreateBookingAsync(999, group.Id, TestDb.Tourists(1)));
@@ -63,7 +80,7 @@ public class BookingServiceTests
     {
         using var context = TestDb.CreateContext();
         var group = await TestDb.SeedGroupAsync(context);
-        var service = new BookingService(new UnitOfWork(context));
+        var service = new BookingService(new UnitOfWork(context), TestDb.Encryption());
 
         await Assert.ThrowsAsync<ArgumentException>(
             () => service.CreateBookingAsync(1, group.Id, []));
@@ -74,7 +91,7 @@ public class BookingServiceTests
     {
         using var context = TestDb.CreateContext();
         var group = await TestDb.SeedGroupAsync(context, daysToDeparture: -1);
-        var service = new BookingService(new UnitOfWork(context));
+        var service = new BookingService(new UnitOfWork(context), TestDb.Encryption());
 
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => service.CreateBookingAsync(1, group.Id, TestDb.Tourists(1)));
@@ -85,7 +102,7 @@ public class BookingServiceTests
     {
         using var context = TestDb.CreateContext();
         var group = await TestDb.SeedGroupAsync(context);
-        var service = new BookingService(new UnitOfWork(context));
+        var service = new BookingService(new UnitOfWork(context), TestDb.Encryption());
         var booking = await service.CreateBookingAsync(1, group.Id, TestDb.Tourists(1));
 
         await service.ConfirmBookingAsync(booking.Id);
@@ -98,7 +115,7 @@ public class BookingServiceTests
     {
         using var context = TestDb.CreateContext();
         var group = await TestDb.SeedGroupAsync(context, seats: 10);
-        var service = new BookingService(new UnitOfWork(context));
+        var service = new BookingService(new UnitOfWork(context), TestDb.Encryption());
         var booking = await service.CreateBookingAsync(1, group.Id, TestDb.Tourists(3));
 
         await service.CancelBookingAsync(booking.Id);
@@ -112,7 +129,7 @@ public class BookingServiceTests
     {
         using var context = TestDb.CreateContext();
         var group = await TestDb.SeedGroupAsync(context);
-        var service = new BookingService(new UnitOfWork(context));
+        var service = new BookingService(new UnitOfWork(context), TestDb.Encryption());
         var booking = await service.CreateBookingAsync(1, group.Id, TestDb.Tourists(1));
         await service.CancelBookingAsync(booking.Id);
 
@@ -127,7 +144,7 @@ public class BookingServiceTests
     {
         using var context = TestDb.CreateContext();
         await TestDb.SeedGroupAsync(context);
-        var service = new BookingService(new UnitOfWork(context));
+        var service = new BookingService(new UnitOfWork(context), TestDb.Encryption());
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() => service.CancelBookingAsync(999));
     }
