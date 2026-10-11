@@ -2,7 +2,7 @@
 
 Друга частина ЛР3. На основі аналізу вимог (`01-requirements-analysis.md`) та моделі бази даних
 предметної області «Туристична фірма» подано: діаграми класів зі зв'язками, опис атрибутів і методів,
-ER-діаграму бази даних MySQL, діаграму станів бронювання та специфікацію REST API.
+ER-діаграму бази даних SQL Server, діаграму станів бронювання та специфікацію REST API.
 
 Діаграми записані мовою Mermaid і відображаються безпосередньо на GitHub.
 
@@ -38,7 +38,7 @@ flowchart LR
     Api --> Core[TravelAgency.Core<br/>сутності, сервіси, інтерфейси]
     Api --> Infra[TravelAgency.Infrastructure<br/>EF Core, репозиторії, шлюзи]
     Infra --> Core
-    Infra --> DB[(MySQL 8)]
+    Infra --> DB[(SQL Server)]
 ```
 
 `Core` не залежить від інших проєктів: усі зовнішні залежності (БД, шифрування, платіжний шлюз,
@@ -616,7 +616,7 @@ classDiagram
 `FakePaymentGateway` та `ConsoleNotifier` — заглушки, що замінюють LiqPay/Stripe та SMS/Email (див. межі реалізації).
 Заміна реалізації не змінює сервісів, оскільки вони залежать лише від інтерфейсів.
 
-## 7. ER-діаграма бази даних MySQL
+## 7. ER-діаграма бази даних SQL Server
 
 ```mermaid
 erDiagram
@@ -723,7 +723,7 @@ erDiagram
 
 Індекси: `users(email)` унікальний; `tours(country)`, `tours(base_price)`; `tour_groups(departure_date)`,
 `tour_groups(tour_id)`, `tour_groups(hotel_id)`; `bookings(user_id)`, `bookings(tour_group_id)`, `bookings(status)`;
-`tourists(booking_id)`; `payments(booking_id)`. Зовнішні ключі підтримуються рушієм InnoDB.
+`tourists(booking_id)`; `payments(booking_id)`. Зовнішні ключі підтримуються SQL Server.
 Перелічення (`role`, `status`, `meal_plan`, `transport_type`, `gender` тощо) зберігаються рядками,
 щоб дані були читабельними у БД.
 
