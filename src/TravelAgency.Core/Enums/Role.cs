@@ -1,8 +1,8 @@
 namespace TravelAgency.Core.Enums;
 
-public enum UserRole
+public enum Role
 {
-    Tourist = 1,
+    Client = 1,
     Manager = 2,
     Admin = 3
 }

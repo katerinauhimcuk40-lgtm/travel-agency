@@ -14,16 +14,23 @@ public class PaymentService : IPaymentService
 
     public async Task ProcessPaymentAsync(int bookingId, decimal amount)
     {
-        var booking = await _unitOfWork.Bookings.GetByIdAsync(bookingId);
-        if (booking == null) throw new Exception("Booking not found");
+        var booking = await _unitOfWork.Bookings.GetByIdAsync(bookingId)
+            ?? throw new KeyNotFoundException("Booking not found");
 
+        if (amount != booking.TotalPrice)
+            throw new InvalidOperationException("Payment amount must be equal to the booking total price.");
+
+        // Статус бронювання (Confirmed) перевіряє Booking.MarkPaid()
         var payment = new Payment
         {
-            BookingId = bookingId,
-            Amount = amount
+            BookingId = booking.Id,
+            Amount = booking.TotalPrice,
+            Provider = "Fake",
+            ExternalTransactionId = Guid.NewGuid().ToString()
         };
 
-        payment.Complete();
+        booking.MarkPaid();
+        payment.MarkSucceeded();
 
         await _unitOfWork.Payments.AddAsync(payment);
         _unitOfWork.Bookings.Update(booking);
