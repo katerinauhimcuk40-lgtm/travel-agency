@@ -1,18 +1,21 @@
 using TravelAgency.Core.Entities;
 using TravelAgency.Core.Interfaces;
+using TravelAgency.Core.Models;
 
 namespace TravelAgency.Infrastructure.Services;
 
 public class BookingService : IBookingService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IEncryptionService _encryption;
 
-    public BookingService(IUnitOfWork unitOfWork)
+    public BookingService(IUnitOfWork unitOfWork, IEncryptionService encryption)
     {
         _unitOfWork = unitOfWork;
+        _encryption = encryption;
     }
 
-    public async Task<Booking> CreateBookingAsync(int userId, int tourGroupId, List<Tourist> tourists)
+    public async Task<Booking> CreateBookingAsync(int userId, int tourGroupId, IReadOnlyList<TouristInfo> tourists)
     {
         if (tourists is null || tourists.Count == 0)
             throw new ArgumentException("At least one tourist is required.", nameof(tourists));
@@ -32,18 +35,25 @@ public class BookingService : IBookingService
 
         group.Reserve(tourists.Count);
 
-        foreach (var tourist in tourists)
-        {
-            tourist.TicketPrice = tour.BasePrice;
-        }
+        var touristEntities = tourists
+            .Select(t => new Tourist
+            {
+                FullName = t.FullName,
+                PassportEncrypted = _encryption.Encrypt(t.Passport),
+                Gender = t.Gender,
+                Age = t.Age,
+                ChildrenInfo = t.ChildrenInfo,
+                TicketPrice = tour.BasePrice
+            })
+            .ToList();
 
         var booking = new Booking
         {
             UserId = user.Id,
             TourGroupId = group.Id,
-            PersonsCount = tourists.Count,
-            TotalPrice = tourists.Sum(t => t.TicketPrice),
-            Tourists = tourists
+            PersonsCount = touristEntities.Count,
+            TotalPrice = touristEntities.Sum(t => t.TicketPrice),
+            Tourists = touristEntities
         };
 
         await _unitOfWork.Bookings.AddAsync(booking);

@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 
-using TravelAgency.Core.Entities;
+using TravelAgency.Api.Dtos;
 using TravelAgency.Core.Interfaces;
+using TravelAgency.Core.Models;
 
 namespace TravelAgency.Api.Controllers;
 
@@ -18,48 +19,41 @@ public class BookingsController : ControllerBase
         _paymentService = paymentService;
     }
 
+    /// <summary>UC-06: забронювати тур (виліт групи) для списку мандрівників.</summary>
     [HttpPost]
-    public async Task<IActionResult> CreateBooking([FromBody] CreateBookingDto dto)
+    [ProducesResponseType<BookingResponse>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<BookingResponse>> Create([FromBody] CreateBookingRequest request)
     {
-        try
-        {
-            var booking = await _bookingService.CreateBookingAsync(dto.UserId, dto.TourGroupId, dto.Tourists);
-            return Ok(booking);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var tourists = request.Tourists
+            .Select(t => new TouristInfo(t.FullName, t.Passport, t.Gender, t.Age, t.ChildrenInfo))
+            .ToList();
+
+        var booking = await _bookingService.CreateBookingAsync(request.UserId, request.TourGroupId, tourists);
+
+        return Ok(BookingResponse.From(booking));
     }
 
-    [HttpPost("{id}/confirm")]
-    public async Task<IActionResult> ConfirmBooking(int id)
+    /// <summary>UC-13: підтвердити бронювання.</summary>
+    [HttpPost("{id:int}/confirm")]
+    public async Task<IActionResult> Confirm(int id)
     {
-        try
-        {
-            await _bookingService.ConfirmBookingAsync(id);
-            return Ok(new { message = "Booking confirmed successfully" });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        await _bookingService.ConfirmBookingAsync(id);
+        return NoContent();
     }
 
-    [HttpPost("{id}/pay")]
-    public async Task<IActionResult> PayBooking(int id, [FromBody] PayDto dto)
+    /// <summary>UC-09: скасувати бронювання.</summary>
+    [HttpPost("{id:int}/cancel")]
+    public async Task<IActionResult> Cancel(int id)
     {
-        try
-        {
-            await _paymentService.ProcessPaymentAsync(id, dto.Amount);
-            return Ok(new { message = "Payment processed successfully" });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        await _bookingService.CancelBookingAsync(id);
+        return NoContent();
+    }
+
+    /// <summary>UC-10: оплатити бронювання (сума має дорівнювати вартості бронювання).</summary>
+    [HttpPost("{id:int}/pay")]
+    public async Task<IActionResult> Pay(int id, [FromBody] PayRequest request)
+    {
+        await _paymentService.ProcessPaymentAsync(id, request.Amount);
+        return NoContent();
     }
 }
-
-public record CreateBookingDto(int UserId, int TourGroupId, List<Tourist> Tourists);
-public record PayDto(decimal Amount);

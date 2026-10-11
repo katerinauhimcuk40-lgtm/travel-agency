@@ -12,7 +12,7 @@ public class PaymentServiceTests
     {
         var group = await TestDb.SeedGroupAsync(context);
         var unitOfWork = new UnitOfWork(context);
-        var bookings = new BookingService(unitOfWork);
+        var bookings = new BookingService(unitOfWork, TestDb.Encryption());
         var payments = new PaymentService(unitOfWork);
         var booking = await bookings.CreateBookingAsync(1, group.Id, TestDb.Tourists(2));
 
