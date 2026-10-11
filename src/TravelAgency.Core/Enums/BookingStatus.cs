@@ -2,8 +2,9 @@ namespace TravelAgency.Core.Enums;
 
 public enum BookingStatus
 {
-    Pending = 1,
-    Reserved = 2,
-    Confirmed = 3,
-    Cancelled = 4
+    New = 1,
+    Confirmed = 2,
+    Paid = 3,
+    Completed = 4,
+    Cancelled = 5
 }
