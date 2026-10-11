@@ -5,9 +5,9 @@ namespace TravelAgency.Core.Interfaces;
 public interface IUnitOfWork : IDisposable
 {
     IRepository<User> Users { get; }
-    IRepository<Tour> Tours { get; }
+    ITourRepository Tours { get; }
     IRepository<Hotel> Hotels { get; }
-    IRepository<TourGroup> TourGroups { get; }
+    ITourGroupRepository TourGroups { get; }
     IRepository<Booking> Bookings { get; }
     IRepository<Tourist> Tourists { get; }
     IRepository<Payment> Payments { get; }

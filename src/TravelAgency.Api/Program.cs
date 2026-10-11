@@ -33,6 +33,7 @@ builder.Services.AddSingleton<IEncryptionService>(_ => new AesEncryptionService(
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<ITourCatalogService, TourCatalogService>();
 
 builder.Services.AddHealthChecks();
 
@@ -50,6 +51,12 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    // У розробці: застосувати міграції та заповнити БД початковими даними
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<TravelAgencyDbContext>();
+    await db.Database.MigrateAsync();
+    await DbSeeder.SeedAsync(db);
 }
 
 app.UseHttpsRedirection();

@@ -3,6 +3,15 @@
 ### Health check
 GET {{TravelAgency.Api_HostAddress}}/health
 
+### UC-03: список турів
+GET {{TravelAgency.Api_HostAddress}}/api/tours?page=1&pageSize=10
+
+### UC-04: тур і його групи
+GET {{TravelAgency.Api_HostAddress}}/api/tours/1
+
+### UC-05: пошук груп (країна, ціна, харчування)
+GET {{TravelAgency.Api_HostAddress}}/api/tours/search?country=Turkey&maxPrice=700&mealPlan=AI
+
 ### UC-06: створити бронювання (потрібні користувач Id=1 та група Id=1 у БД)
 POST {{TravelAgency.Api_HostAddress}}/api/bookings
 Content-Type: application/json

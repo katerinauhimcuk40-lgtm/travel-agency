@@ -9,9 +9,9 @@ public class UnitOfWork : IUnitOfWork
     private readonly TravelAgencyDbContext _context;
 
     public IRepository<User> Users { get; }
-    public IRepository<Tour> Tours { get; }
+    public ITourRepository Tours { get; }
     public IRepository<Hotel> Hotels { get; }
-    public IRepository<TourGroup> TourGroups { get; }
+    public ITourGroupRepository TourGroups { get; }
     public IRepository<Booking> Bookings { get; }
     public IRepository<Tourist> Tourists { get; }
     public IRepository<Payment> Payments { get; }
@@ -20,9 +20,9 @@ public class UnitOfWork : IUnitOfWork
     {
         _context = context;
         Users = new Repository<User>(_context);
-        Tours = new Repository<Tour>(_context);
+        Tours = new TourRepository(_context);
         Hotels = new Repository<Hotel>(_context);
-        TourGroups = new Repository<TourGroup>(_context);
+        TourGroups = new TourGroupRepository(_context);
         Bookings = new Repository<Booking>(_context);
         Tourists = new Repository<Tourist>(_context);
         Payments = new Repository<Payment>(_context);
