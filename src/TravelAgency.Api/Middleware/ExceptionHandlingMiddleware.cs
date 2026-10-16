@@ -2,10 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace TravelAgency.Api.Middleware;
 
-/// <summary>
-/// Перетворює винятки на відповіді ProblemDetails:
-/// KeyNotFoundException → 404, InvalidOperationException → 409, ArgumentException → 400, інше → 500.
-/// </summary>
+
 public class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
