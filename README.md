@@ -38,7 +38,3 @@ Swagger відкривається в режимі Development за адресо
 - `main` — стабільна гілка, зміни лише через pull request
 - `docs/<назва>`, `feature/<назва>`, `fix/<назва>`, `test/<назва>`, `chore/<назва>` — робочі гілки
 - Повідомлення комітів — за Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `chore:`)
-
-## Діаграма варіантів використання (Use Case Diagram)
-
-![Use Case Diagram](docs/images/use-case-diagram.png)
