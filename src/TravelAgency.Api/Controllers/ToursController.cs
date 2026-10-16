@@ -17,7 +17,6 @@ public class ToursController : ControllerBase
         _catalog = catalog;
     }
 
-    /// <summary>UC-03: список активних турів.</summary>
     [HttpGet]
     public async Task<ActionResult<PagedResponse<TourResponse>>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
@@ -25,7 +24,6 @@ public class ToursController : ControllerBase
         return Ok(PagedResponse<TourResponse>.From(result, TourResponse.From));
     }
 
-    /// <summary>UC-04: інформація про тур і його майбутні групи.</summary>
     [HttpGet("{id:int}")]
     public async Task<ActionResult<TourDetailsResponse>> GetById(int id)
     {
@@ -33,11 +31,18 @@ public class ToursController : ControllerBase
         return Ok(TourDetailsResponse.From(tour));
     }
 
-    /// <summary>UC-05: пошук груп за країною, датами вильоту, готелем, ціною та харчуванням.</summary>
     [HttpGet("search")]
     public async Task<ActionResult<PagedResponse<TourSearchItem>>> Search([FromQuery] TourSearchCriteria criteria)
     {
         var result = await _catalog.SearchAsync(criteria);
         return Ok(PagedResponse<TourSearchItem>.From(result, TourSearchItem.From));
+    }
+    [HttpGet("groups/{groupId:int}/availability")]
+    [ProducesResponseType<AvailabilityResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<AvailabilityResponse>> GetAvailability(int groupId)
+    {
+        var g = await _catalog.GetGroupAsync(groupId);
+        return Ok(new AvailabilityResponse(g.Id, g.SeatsTotal, g.SeatsAvailable, g.SeatsAvailable > 0));
     }
 }

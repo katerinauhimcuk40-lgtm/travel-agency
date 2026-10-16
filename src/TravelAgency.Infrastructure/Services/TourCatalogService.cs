@@ -31,6 +31,12 @@ public class TourCatalogService : ITourCatalogService
         return tour;
     }
 
+    public async Task<TourGroup> GetGroupAsync(int groupId)
+    {
+        return await _unitOfWork.TourGroups.GetByIdAsync(groupId)
+            ?? throw new KeyNotFoundException("Tour group not found");
+    }
+
     public async Task<PagedResult<TourGroup>> SearchAsync(TourSearchCriteria criteria)
     {
         ArgumentNullException.ThrowIfNull(criteria);
