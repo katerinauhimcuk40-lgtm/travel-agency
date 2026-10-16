@@ -52,7 +52,6 @@ public record TourGroupResponse(
         group.Hotel is null ? null : HotelResponse.From(group.Hotel));
 }
 
-/// <summary>Тур разом з найближчими групами (UC-04).</summary>
 public record TourDetailsResponse(TourResponse Tour, List<TourGroupResponse> Groups)
 {
     public static TourDetailsResponse From(Tour tour) => new(
@@ -60,7 +59,6 @@ public record TourDetailsResponse(TourResponse Tour, List<TourGroupResponse> Gro
         tour.TourGroups.Select(TourGroupResponse.From).ToList());
 }
 
-/// <summary>Результат пошуку (UC-05): група вильоту з даними туру.</summary>
 public record TourSearchItem(TourResponse Tour, TourGroupResponse Group)
 {
     public static TourSearchItem From(TourGroup group) =>
@@ -76,3 +74,4 @@ public record PagedResponse<T>(IReadOnlyList<T> Items, int Page, int PageSize, i
         result.TotalCount,
         result.TotalPages);
 }
+public record AvailabilityResponse(int GroupId, int SeatsTotal, int SeatsAvailable, bool IsAvailable);
