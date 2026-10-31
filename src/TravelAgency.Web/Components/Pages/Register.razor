@@ -1,0 +1,90 @@
+@page "/register"
+@inject ApiClient Api
+@inject AuthSession Session
+@inject NavigationManager Nav
+
+<PageTitle>Реєстрація — TravelAgency</PageTitle>
+
+<div class="container page page--narrow">
+    <h1>Реєстрація</h1>
+
+    <EditForm Model="form" OnValidSubmit="SubmitAsync" class="panel">
+        <DataAnnotationsValidator />
+
+        @if (error is not null)
+        {
+            <div class="alert alert--error" role="alert">@error</div>
+        }
+
+        <div class="field">
+            <label for="reg-name">Прізвище та ім'я</label>
+            <InputText id="reg-name" autocomplete="name" @bind-Value="form.FullName" />
+            <ValidationMessage For="() => form.FullName" class="field-error" />
+        </div>
+
+        <div class="field">
+            <label for="reg-email">Електронна пошта</label>
+            <InputText id="reg-email" type="email" autocomplete="email" @bind-Value="form.Email" />
+            <ValidationMessage For="() => form.Email" class="field-error" />
+        </div>
+
+        <div class="field">
+            <label for="reg-phone">Телефон (необов'язково)</label>
+            <InputText id="reg-phone" type="tel" autocomplete="tel" @bind-Value="form.Phone" />
+            <ValidationMessage For="() => form.Phone" class="field-error" />
+        </div>
+
+        <div class="field">
+            <label for="reg-password">Пароль (щонайменше 8 символів)</label>
+            <InputText id="reg-password" type="password" autocomplete="new-password" @bind-Value="form.Password" />
+            <ValidationMessage For="() => form.Password" class="field-error" />
+        </div>
+
+        <div class="field">
+            <label for="reg-confirm">Повторіть пароль</label>
+            <InputText id="reg-confirm" type="password" autocomplete="new-password" @bind-Value="form.ConfirmPassword" />
+            <ValidationMessage For="() => form.ConfirmPassword" class="field-error" />
+        </div>
+
+        <button type="submit" class="btn btn--accent btn--block" disabled="@submitting">
+            @(submitting ? "Створюємо…" : "Зареєструватися")
+        </button>
+
+        <p class="panel__footer">Вже є обліковий запис? <a href="@LoginHref">Увійти</a></p>
+    </EditForm>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "returnUrl")] public string? ReturnUrl { get; set; }
+
+    private readonly RegisterForm form = new();
+    private string? error;
+    private bool submitting;
+
+    private string LoginHref =>
+        string.IsNullOrEmpty(ReturnUrl) ? "/login" : "/login?returnUrl=" + Uri.EscapeDataString(ReturnUrl);
+
+    private async Task SubmitAsync()
+    {
+        error = null;
+        submitting = true;
+
+        try
+        {
+            var response = await Api.RegisterAsync(form);
+            await Session.SignInAsync(response);
+            Nav.NavigateTo(SafeReturnUrl(ReturnUrl));
+        }
+        catch (ApiException ex)
+        {
+            error = ex.Message;
+        }
+
+        submitting = false;
+    }
+
+    private static string SafeReturnUrl(string? url) =>
+        !string.IsNullOrEmpty(url) && url.StartsWith('/') && !url.StartsWith("//") && !url.Contains('\\')
+            ? url
+            : "/account";
+}

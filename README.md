@@ -9,6 +9,8 @@
 
 - C# / .NET 10 — ASP.NET Core Web API
 - Entity Framework Core + Microsoft SQL Server (LocalDB)
+- Blazor Web App (інтерактивний сервер) — вебсайт TravelAgency.Web, працює через REST API
+- JWT + BCrypt — автентифікація
 - xUnit — тестування
 - GitHub Actions — CI (планується)
 
@@ -17,7 +19,8 @@
 ```
 src/TravelAgency.Core            сутності, перелічення, інтерфейси
 src/TravelAgency.Infrastructure  EF Core, репозиторії, сервіси, міграції
-src/TravelAgency.Api             REST API (контролери)
+src/TravelAgency.Api             REST API (контролери, JWT)
+src/TravelAgency.Web             вебсайт (Blazor): каталог, бронювання, кабінет клієнта
 tests/TravelAgency.Tests         юніт-тести
 docs/                            аналіз вимог, проєктування
 ```
@@ -27,9 +30,12 @@ docs/                            аналіз вимог, проєктуванн
 ```bash
 dotnet build
 dotnet ef database update --project src/TravelAgency.Infrastructure --startup-project src/TravelAgency.Api
-dotnet run --project src/TravelAgency.Api
+dotnet run --project src/TravelAgency.Api   # API: http://localhost:5081
+dotnet run --project src/TravelAgency.Web   # сайт: http://localhost:5200 (спершу запустіть API)
 dotnet test
 ```
+
+Тестові облікові записи (лише Development): `client@travel.local` / `Client123!`, `manager@travel.local` / `Manager123!`, `admin@travel.local` / `Admin123!`.
 
 Swagger відкривається в режимі Development за адресою `/swagger`.
 

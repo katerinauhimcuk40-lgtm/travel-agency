@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Веб-клієнт використовує лише перелічення (Role, BookingStatus, MealPlan, Gender, TransportType) із шару Core. -->
+    <ProjectReference Include="..\TravelAgency.Core\TravelAgency.Core.csproj" />
+  </ItemGroup>
+
+</Project>

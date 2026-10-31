@@ -8,7 +8,7 @@ public interface IUnitOfWork : IDisposable
     ITourRepository Tours { get; }
     IRepository<Hotel> Hotels { get; }
     ITourGroupRepository TourGroups { get; }
-    IRepository<Booking> Bookings { get; }
+    IBookingRepository Bookings { get; }
     IRepository<Tourist> Tourists { get; }
     IRepository<Payment> Payments { get; }
     Task<int> SaveChangesAsync();

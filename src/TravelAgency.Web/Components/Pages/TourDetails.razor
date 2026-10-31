@@ -1,0 +1,142 @@
+@page "/tours/{Id:int}"
+@inject ApiClient Api
+
+<PageTitle>@(details is null ? "Тур" : details.Tour.Title) — TravelAgency</PageTitle>
+
+<div class="container page">
+    <a class="back-link" href="/tours">← До каталогу</a>
+
+    @if (loading)
+    {
+        <p class="state">Завантаження…</p>
+    }
+    else if (error is not null)
+    {
+        <div class="alert alert--error" role="alert">@error</div>
+    }
+    else if (details is not null)
+    {
+        var tour = details.Tour;
+
+        <div class="tour-layout">
+            <div class="tour-main">
+                <TourArt Seed="@tour.Country" Height="260" />
+
+                <h1 class="tour-title">@tour.Title</h1>
+                <p class="tour-place">@Fmt.Country(tour.Country) · @tour.Cities</p>
+
+                <div class="chips">
+                    <span class="chip chip--teal">@Fmt.Meal(tour.MealPlan)</span>
+                    <span class="chip">@Fmt.Transport(tour.TransportType)</span>
+                    <span class="chip">@tour.AccommodationType</span>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(tour.Description))
+                {
+                    <p class="tour-description">@tour.Description</p>
+                }
+
+                <h2>Дата виїзду</h2>
+                @if (details.Groups.Count == 0)
+                {
+                    <p class="muted">Найближчих вильотів за цим туром поки немає.</p>
+                }
+                else
+                {
+                    <fieldset class="group-list">
+                        <legend class="visually-hidden">Оберіть групу</legend>
+                        @foreach (var group in details.Groups)
+                        {
+                            var soldOut = group.SeatsAvailable <= 0;
+                            <label class="group-option @(selectedGroupId == group.Id ? "is-selected" : "") @(soldOut ? "is-disabled" : "")">
+                                <input type="radio" name="tour-group" checked="@(selectedGroupId == group.Id)" disabled="@soldOut" @onchange="() => selectedGroupId = group.Id" />
+                                <span class="group-option__main">
+                                    <span class="group-option__dates">@Fmt.DateRange(group.DepartureDate, group.ArrivalDate)</span>
+                                    <span class="group-option__meta">
+                                        @Fmt.NightsLabel(group.DepartureDate, group.ArrivalDate)
+                                        @if (group.Hotel is not null)
+                                        {
+                                            <text> · @group.Hotel.Name, @Fmt.Stars(group.Hotel.HotelType)</text>
+                                        }
+                                    </span>
+                                </span>
+                                <span class="group-option__side">
+                                    <span class="group-option__price">@Fmt.Money(tour.BasePrice)</span>
+                                    <span class="seats @(group.SeatsAvailable is > 0 and <= 5 ? "seats--low" : "")">@Fmt.Seats(group.SeatsAvailable)</span>
+                                </span>
+                            </label>
+                        }
+                    </fieldset>
+                }
+
+                <h2>Що входить у вартість</h2>
+                <ul class="checklist">
+                    <li>Проживання: @tour.AccommodationType</li>
+                    <li>Харчування: @Fmt.Meal(tour.MealPlan).ToLowerInvariant()</li>
+                    <li>Транспорт: @Fmt.Transport(tour.TransportType).ToLowerInvariant()</li>
+                </ul>
+            </div>
+
+            <div class="buybar">
+                <div class="buybar__price">
+                    <span class="buybar__label">@(SelectedGroup is null ? "Оберіть дату виїзду" : $"{Fmt.DateRange(SelectedGroup.DepartureDate, SelectedGroup.ArrivalDate)} · за особу")</span>
+                    <span class="buybar__value">@Fmt.Money(tour.BasePrice)</span>
+                </div>
+                @if (SelectedGroup is not null && SelectedGroup.SeatsAvailable > 0)
+                {
+                    <a class="btn btn--accent btn--lg" href="@($"/tours/{tour.Id}/book/{SelectedGroup.Id}")">Забронювати</a>
+                }
+                else
+                {
+                    <button type="button" class="btn btn--accent btn--lg" disabled>Забронювати</button>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    [SupplyParameterFromQuery(Name = "group")] public int? GroupQuery { get; set; }
+
+    private TourDetailsResponse? details;
+    private string? error;
+    private bool loading = true;
+    private int? selectedGroupId;
+    private int loadedId;
+
+    private TourGroupResponse? SelectedGroup =>
+        details?.Groups.FirstOrDefault(g => g.Id == selectedGroupId);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (loadedId != Id)
+        {
+            loading = true;
+            error = null;
+            details = null;
+            selectedGroupId = null;
+
+            try
+            {
+                details = await Api.GetTourAsync(Id);
+                loadedId = Id;
+            }
+            catch (ApiException ex)
+            {
+                error = ex.Message;
+            }
+
+            loading = false;
+        }
+
+        if (details is not null && selectedGroupId is null)
+        {
+            // Група з посилання, якщо в ній є місця; інакше перша з вільними місцями
+            var preferred = details.Groups.FirstOrDefault(g => g.Id == GroupQuery && g.SeatsAvailable > 0)
+                ?? details.Groups.FirstOrDefault(g => g.SeatsAvailable > 0);
+            selectedGroupId = preferred?.Id;
+        }
+    }
+}

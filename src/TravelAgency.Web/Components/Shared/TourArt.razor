@@ -1,0 +1,27 @@
+<svg class="art" viewBox="0 0 350 140" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style="@($"height:{Height}px")">
+    <rect width="350" height="140" fill="@Palette.Bg" />
+    <circle cx="@SunX" cy="42" r="20" fill="@Palette.Sun" />
+    <path d="M0 100 Q 44 84 88 100 T 176 100 T 264 100 T 352 100 V140 H0Z" fill="@Palette.Wave1" />
+    <path d="M0 118 Q 44 104 88 118 T 176 118 T 264 118 T 352 118 V140 H0Z" fill="@Palette.Wave2" />
+</svg>
+
+@code {
+    private sealed record ArtPalette(string Bg, string Sun, string Wave1, string Wave2);
+
+    private static readonly ArtPalette[] Palettes =
+    [
+        new("#CFE6F7", "#FFB38F", "#0B5FA5", "#14B8A6"),
+        new("#FFE3D6", "#FF7A45", "#14B8A6", "#0B5FA5"),
+        new("#D5F3EE", "#FFB38F", "#0B5FA5", "#0F766E"),
+        new("#E6F0F9", "#FF7A45", "#0B5FA5", "#14B8A6")
+    ];
+
+    /// <summary>Текст, за яким підбирається колірний варіант ілюстрації (наприклад, країна).</summary>
+    [Parameter] public string Seed { get; set; } = string.Empty;
+
+    [Parameter] public int Height { get; set; } = 140;
+
+    private int Hash => Seed.Sum(c => (int)c);
+    private ArtPalette Palette => Palettes[Hash % Palettes.Length];
+    private int SunX => Hash % 2 == 0 ? 270 : 80;
+}

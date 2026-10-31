@@ -1,0 +1,324 @@
+/* TravelAgency — стилі веб-клієнта. Палітра й типографіка з макета Figma. Mobile first. */
+
+:root {
+    --blue: #0B5FA5;
+    --blue-dark: #084A82;
+    --blue-soft: #E6F0F9;
+    --teal: #14B8A6;
+    --teal-soft: #D5F3EE;
+    --teal-ink: #0F5F58;
+    --coral: #FF7A45;
+    --coral-dark: #F2622A;
+    --bg: #F5F8FB;
+    --card: #FFFFFF;
+    --ink: #14213D;
+    --muted: #536278;
+    --line: #E2E8F0;
+    --line-strong: #8294A8;
+    --warn-ink: #9A3412;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --bottomnav-h: 64px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+    margin: 0;
+    padding-bottom: var(--bottomnav-h);
+    background: var(--bg);
+    color: var(--ink);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+h1, h2, h3 { line-height: 1.2; margin: 0 0 12px; }
+h1 { font-size: 28px; font-weight: 700; }
+h2 { font-size: 20px; font-weight: 700; }
+h3 { font-size: 17px; font-weight: 600; }
+p { margin: 0 0 12px; }
+a { color: var(--blue); }
+img, svg { max-width: 100%; }
+
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+
+.container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+.muted { color: var(--muted); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.hide-mobile { display: none !important; }
+
+/* ---------- Шапка ---------- */
+.site-header { background: var(--blue); color: #fff; }
+.site-header__row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; }
+.brand { color: #fff; font-size: 20px; font-weight: 700; text-decoration: none; }
+.topnav { display: none; gap: 4px; }
+.topnav__link { color: #DCEBF7; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: 500; }
+.topnav__link:hover { background: rgba(255, 255, 255, .12); color: #fff; }
+.topnav__link.active { background: rgba(255, 255, 255, .18); color: #fff; }
+.header-actions { display: flex; align-items: center; gap: 10px; }
+.header-user { display: none; color: #DCEBF7; font-size: 14px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- Кнопки ---------- */
+.btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 44px; padding: 0 18px;
+    border: 1px solid transparent; border-radius: 10px;
+    font-family: inherit; font-size: 15px; font-weight: 600; line-height: 1;
+    text-decoration: none; cursor: pointer;
+    transition: background-color .15s, border-color .15s;
+}
+.btn:disabled, .btn[disabled] { opacity: .55; cursor: not-allowed; }
+.btn--sm { min-height: 40px; padding: 0 14px; font-size: 14px; }
+.btn--lg { min-height: 52px; padding: 0 24px; font-size: 16px; font-weight: 700; }
+.btn--block { width: 100%; min-height: 52px; font-size: 16px; font-weight: 700; }
+.btn--primary { background: var(--blue); color: #fff; }
+.btn--primary:hover:not(:disabled) { background: var(--blue-dark); }
+.btn--accent { background: var(--coral); color: var(--ink); }
+.btn--accent:hover:not(:disabled) { background: var(--coral-dark); }
+.btn--outline { background: #fff; color: var(--blue); border-color: var(--blue); }
+.btn--outline:hover:not(:disabled) { background: var(--blue-soft); }
+.btn--outline-light { background: transparent; color: #fff; border-color: #8DB8DC; }
+.btn--outline-light:hover:not(:disabled) { background: rgba(255, 255, 255, .12); }
+.btn--danger { background: #B91C1C; color: #fff; }
+.btn--danger:hover:not(:disabled) { background: #991B1B; }
+.btn--link { background: none; color: var(--blue); padding: 0 4px; min-height: 44px; text-decoration: underline; }
+
+/* ---------- Каркас сторінки ---------- */
+.site-main { min-height: 60vh; }
+.page { padding-top: 24px; padding-bottom: 32px; }
+.page--narrow { max-width: 640px; }
+.state { padding: 24px 20px; color: var(--muted); }
+.back-link { display: inline-block; margin-bottom: 12px; text-decoration: none; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+
+.site-footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; padding: 16px 0; }
+.site-footer .container { display: flex; flex-wrap: wrap; gap: 4px 24px; justify-content: space-between; }
+
+/* ---------- Нижня навігація (телефон) ---------- */
+.bottomnav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    height: var(--bottomnav-h); display: flex;
+    background: #fff; border-top: 1px solid var(--line);
+}
+.bottomnav__link {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    color: var(--muted); font-size: 12px; font-weight: 500; text-decoration: none;
+}
+.bottomnav__link.active { color: var(--blue); font-weight: 600; }
+
+/* ---------- Форми ---------- */
+.field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; min-width: 0; }
+.field label { font-size: 13px; font-weight: 600; }
+.field-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+input[type="text"], input[type="email"], input[type="password"], input[type="tel"],
+input[type="number"], input[type="date"], select, .field input, .field select {
+    width: 100%; min-width: 0; height: 48px; padding: 0 12px;
+    border: 1px solid var(--line-strong); border-radius: 8px; background: #fff; color: var(--ink);
+    font-family: inherit; font-size: 16px;
+}
+input::placeholder { color: #6B7A90; }
+input.invalid, .invalid { border-color: #B91C1C; }
+.field-error, .validation-message { color: #B91C1C; font-size: 13px; font-weight: 500; }
+.hint { color: var(--muted); font-size: 14px; }
+.hint--dev { margin-top: 16px; padding: 12px 14px; background: var(--blue-soft); border-radius: var(--radius-sm); }
+
+.alert { padding: 12px 14px; border-radius: var(--radius-sm); margin-bottom: 16px; font-size: 15px; }
+.alert--error { background: #FEE2E2; color: #7F1D1D; }
+.alert--success { background: #DCFCE7; color: #14532D; }
+.alert--info { background: var(--blue-soft); color: #0B3D6B; }
+
+/* ---------- Головна ---------- */
+.hero { background: var(--blue); color: #fff; padding: 12px 0 28px; border-radius: 0 0 24px 24px; }
+.hero__title { font-size: 28px; color: #fff; margin: 12px 0 8px; }
+.hero__lead { color: #DCEBF7; margin-bottom: 20px; }
+.search-card { background: #fff; color: var(--ink); border-radius: var(--radius); padding: 16px; }
+.search-card .field:last-of-type { margin-bottom: 16px; }
+
+.section { padding: 28px 0 0; }
+.section__more { margin: 12px 0 0; font-weight: 600; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+    display: inline-flex; align-items: center; min-height: 28px; padding: 2px 10px;
+    border-radius: 8px; background: var(--blue-soft); color: #0B4F8A; font-size: 13px; font-weight: 600;
+}
+.chip--teal { background: var(--teal-soft); color: var(--teal-ink); }
+.chip--link {
+    min-height: 44px; padding: 0 18px; border-radius: 22px; background: #fff; color: var(--ink);
+    border: 1px solid #C9D5E1; font-size: 15px; font-weight: 500; text-decoration: none;
+}
+.chip--link:hover { border-color: var(--blue); color: var(--blue); }
+
+.features { display: grid; gap: 16px; }
+.feature { display: flex; gap: 12px; align-items: flex-start; }
+.feature h3 { margin-bottom: 2px; }
+.feature p { color: var(--muted); font-size: 14px; margin: 0; }
+.feature__icon {
+    flex-shrink: 0; width: 40px; height: 40px; border-radius: 20px;
+    background: var(--blue-soft); color: var(--blue); display: flex; align-items: center; justify-content: center;
+}
+
+/* ---------- Картки турів ---------- */
+.card-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+.tour-card {
+    display: block; overflow: hidden; background: var(--card); color: var(--ink);
+    border: 1px solid var(--line); border-radius: var(--radius); text-decoration: none;
+    transition: box-shadow .15s, transform .15s;
+}
+.tour-card:hover { box-shadow: 0 8px 24px rgba(20, 33, 61, .10); transform: translateY(-2px); }
+.art { display: block; width: 100%; }
+.tour-card__body { padding: 14px 16px 16px; }
+.tour-card__badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.tour-card__title { font-size: 18px; margin-bottom: 4px; }
+.tour-card__place, .tour-card__meta { margin: 0 0 4px; font-size: 14px; color: var(--muted); }
+.tour-card__footer { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.price { font-size: 20px; font-weight: 700; color: var(--blue); }
+.price small { font-size: 13px; font-weight: 400; color: var(--muted); }
+.seats { font-size: 13px; color: var(--muted); }
+.seats--low { color: var(--warn-ink); font-weight: 600; }
+
+/* ---------- Каталог ---------- */
+.filters-toggle { margin-bottom: 16px; }
+.catalog { display: grid; gap: 20px; }
+.filters { display: none; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+.filters.is-open { display: block; }
+.filters__title { font-size: 16px; }
+.filters__actions { display: flex; gap: 12px; margin-top: 4px; }
+.filters__actions .btn { flex: 1; }
+.results__count { color: var(--muted); font-size: 14px; }
+.empty { padding: 28px 20px; background: #fff; border: 1px dashed var(--line-strong); border-radius: var(--radius); text-align: center; }
+.pager { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 24px; flex-wrap: wrap; }
+.pager__info { color: var(--muted); font-size: 14px; }
+
+/* ---------- Сторінка туру ---------- */
+.tour-layout { display: block; }
+.tour-main .art { border-radius: var(--radius); margin-bottom: 16px; }
+.tour-title { font-size: 26px; margin-bottom: 4px; }
+.tour-place { color: var(--muted); margin-bottom: 12px; }
+.tour-description { margin: 16px 0 24px; line-height: 1.6; }
+.tour-main h2 { margin: 24px 0 12px; }
+
+.group-list { border: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.group-option {
+    display: flex; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer;
+    background: #fff; border: 1px solid #C9D5E1; border-radius: 14px;
+}
+.group-option input { width: 20px; height: 20px; margin: 0; accent-color: var(--blue); flex-shrink: 0; }
+.group-option.is-selected { background: #EAF3FB; border: 2px solid var(--blue); padding: 11px 13px; }
+.group-option.is-disabled { background: #EEF2F6; cursor: not-allowed; color: var(--muted); }
+.group-option__main { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.group-option__dates { font-weight: 600; }
+.group-option__meta { font-size: 13px; color: var(--muted); }
+.group-option__side { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
+.group-option__price { font-weight: 700; }
+
+.checklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.checklist li { position: relative; padding-left: 28px; }
+.checklist li::before {
+    content: ""; position: absolute; left: 4px; top: 6px; width: 6px; height: 11px;
+    border: solid #0F766E; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg);
+}
+
+/* Нижня панель з ціною та кнопкою: над мобільною навігацією */
+.buybar {
+    position: sticky; bottom: var(--bottomnav-h); z-index: 10;
+    display: flex; align-items: center; gap: 16px; margin: 24px -20px 0; padding: 12px 20px;
+    background: #fff; border-top: 1px solid var(--line);
+}
+.buybar__price { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.buybar__label { font-size: 13px; color: var(--muted); }
+.buybar__value { font-size: 22px; font-weight: 700; color: var(--blue); }
+
+/* ---------- Бронювання ---------- */
+.panel { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+.panel--success { border-color: #86EFAC; background: #F0FDF4; }
+.panel__footer { margin: 16px 0 0; text-align: center; font-size: 14px; color: var(--muted); }
+.summary { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
+.summary p { margin: 0 0 4px; }
+.summary__title { font-size: 18px; margin-bottom: 6px; }
+.tourist { margin: 0 0 16px; padding: 16px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); }
+.tourist legend { padding: 0 8px; font-weight: 700; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+
+/* ---------- Кабінет ---------- */
+.booking-list { display: grid; gap: 16px; }
+.booking { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+.booking__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.booking__title { font-size: 18px; margin-bottom: 2px; }
+.booking__place { color: var(--muted); font-size: 14px; margin: 0; }
+.booking__facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; margin: 0 0 12px; }
+.booking__facts dt { font-size: 12px; color: var(--muted); }
+.booking__facts dd { margin: 0; font-weight: 500; }
+.booking__total { color: var(--blue); font-weight: 700; }
+.booking__tourists { margin-bottom: 12px; }
+.booking__tourists summary { cursor: pointer; font-weight: 600; min-height: 32px; }
+.booking__tourists ul { margin: 6px 0 0; padding-left: 20px; }
+.confirm { margin-top: 12px; padding: 14px; background: #FFF7ED; border: 1px solid #FDBA74; border-radius: var(--radius-sm); }
+.confirm p { margin-bottom: 8px; }
+
+/* Статуси: колір + текст (колір ніколи не єдина ознака) */
+.badge { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.badge--new { background: #FEF3C7; color: #92400E; }
+.badge--confirmed { background: var(--blue-soft); color: #0B4F8A; }
+.badge--paid { background: #DCFCE7; color: #166534; }
+.badge--completed { background: #EEF2F6; color: #475569; }
+.badge--cancelled { background: #FEE2E2; color: #991B1B; }
+
+/* ---------- Системні елементи Blazor ---------- */
+#blazor-error-ui {
+    display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000;
+    padding: 12px 20px; background: #FEF3C7; color: #92400E; box-shadow: 0 -2px 8px rgba(0, 0, 0, .15);
+}
+#blazor-error-ui .dismiss { cursor: pointer; position: absolute; right: 12px; top: 8px; }
+.blazor-error-boundary { padding: 16px; background: #FEE2E2; color: #7F1D1D; border-radius: var(--radius-sm); }
+.blazor-error-boundary::after { content: "Сталася помилка."; }
+
+/* ---------- Планшет ---------- */
+@media (min-width: 700px) {
+    .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .features { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .hero__title { font-size: 36px; }
+    .search-card { display: grid; grid-template-columns: 1.2fr 2fr auto; gap: 12px; align-items: end; }
+    .search-card .field, .search-card .field:last-of-type { margin-bottom: 0; }
+    .search-card .btn--block { width: auto; padding: 0 28px; }
+    .header-user { display: inline; }
+}
+
+/* ---------- Десктоп ---------- */
+@media (min-width: 900px) {
+    body { padding-bottom: 0; }
+    .bottomnav { display: none; }
+    .topnav { display: flex; }
+    .hide-mobile { display: inline-flex !important; }
+    .site-footer { margin-top: 24px; }
+    h1 { font-size: 32px; }
+    .hero { padding: 24px 0 40px; }
+    .hero__title { font-size: 40px; }
+
+    .filters-toggle { display: none; }
+    .filters, .filters.is-open { display: block; }
+    .catalog { grid-template-columns: 300px minmax(0, 1fr); align-items: start; }
+    .filters { position: sticky; top: 16px; }
+
+    .tour-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 32px; align-items: start; }
+    .tour-layout .buybar {
+        order: 2; position: sticky; top: 16px; bottom: auto; margin: 0;
+        flex-direction: column; align-items: stretch; border: 1px solid var(--line); border-radius: var(--radius);
+    }
+    .tour-layout .buybar .btn { width: 100%; }
+
+    .buybar--form { position: sticky; bottom: 0; margin: 24px 0 0; border: 1px solid var(--line); border-radius: var(--radius); }
+    .booking__facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1100px) {
+    .card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .catalog .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+}

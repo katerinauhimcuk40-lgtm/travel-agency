@@ -1,0 +1,213 @@
+@page "/tours/{TourId:int}/book/{GroupId:int}"
+@attribute [Authorize]
+@inject ApiClient Api
+
+<PageTitle>Бронювання туру — TravelAgency</PageTitle>
+
+<div class="container page page--narrow">
+    @if (loading)
+    {
+        <p class="state">Завантаження…</p>
+    }
+    else if (booked is not null)
+    {
+        <div class="panel panel--success" role="status">
+            <h1>Заявку створено</h1>
+            <p>Бронювання №@booked.Id на суму <strong>@Fmt.Money(booked.TotalPrice)</strong> прийнято.</p>
+            <p class="muted">Зараз воно має статус «@Fmt.Status(booked.Status)». Після підтвердження менеджером у кабінеті з'явиться кнопка оплати.</p>
+            <div class="actions">
+                <a class="btn btn--primary" href="/account">Мої бронювання</a>
+                <a class="btn btn--outline" href="/tours">Продовжити перегляд турів</a>
+            </div>
+        </div>
+    }
+    else if (tour is null || group is null)
+    {
+        <h1>Бронювання</h1>
+        <div class="alert alert--error" role="alert">@(error ?? "Групу не знайдено.")</div>
+        <a class="btn btn--primary" href="/tours">До каталогу</a>
+    }
+    else
+    {
+        <a class="back-link" href="@($"/tours/{tour.Id}?group={group.Id}")">← Назад до туру</a>
+        <h1>Бронювання туру</h1>
+
+        <div class="summary">
+            <h2 class="summary__title">@tour.Title</h2>
+            <p>@Fmt.Country(tour.Country) · @tour.Cities</p>
+            <p>@Fmt.DateRange(group.DepartureDate, group.ArrivalDate) · @Fmt.NightsLabel(group.DepartureDate, group.ArrivalDate)</p>
+            @if (group.Hotel is not null)
+            {
+                <p>@group.Hotel.Name, @Fmt.Stars(group.Hotel.HotelType)</p>
+            }
+            <p class="muted">Вільних місць у групі: @group.SeatsAvailable</p>
+        </div>
+
+        @if (error is not null)
+        {
+            <div class="alert alert--error" role="alert">@error</div>
+        }
+
+        <form @onsubmit="SubmitAsync" @onsubmit:preventDefault novalidate>
+            @for (var i = 0; i < tourists.Count; i++)
+            {
+                var index = i;
+                var t = tourists[index];
+
+                <fieldset class="tourist">
+                    <legend>Турист @(index + 1)</legend>
+
+                    <div class="field">
+                        <label for="@($"fn-{index}")">Прізвище та ім'я (як у паспорті)</label>
+                        <input id="@($"fn-{index}")" type="text" autocomplete="off" @bind="t.FullName" @bind:event="oninput" />
+                        @if (t.Errors.TryGetValue("FullName", out var nameError))
+                        {
+                            <span class="field-error" role="alert">@nameError</span>
+                        }
+                    </div>
+
+                    <div class="field">
+                        <label for="@($"pp-{index}")">Номер паспорта</label>
+                        <input id="@($"pp-{index}")" type="text" autocomplete="off" @bind="t.Passport" @bind:event="oninput" />
+                        @if (t.Errors.TryGetValue("Passport", out var passportError))
+                        {
+                            <span class="field-error" role="alert">@passportError</span>
+                        }
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="@($"gn-{index}")">Стать</label>
+                            <select id="@($"gn-{index}")" @bind="t.Gender">
+                                <option value="@Gender.Male">@Fmt.GenderLabel(Gender.Male)</option>
+                                <option value="@Gender.Female">@Fmt.GenderLabel(Gender.Female)</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="@($"ag-{index}")">Вік</label>
+                            <input id="@($"ag-{index}")" type="number" min="1" max="120" @bind="t.Age" />
+                            @if (t.Errors.TryGetValue("Age", out var ageError))
+                            {
+                                <span class="field-error" role="alert">@ageError</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="@($"ci-{index}")">Примітка щодо дитини (необов'язково)</label>
+                        <input id="@($"ci-{index}")" type="text" @bind="t.ChildrenInfo" />
+                        @if (t.Errors.TryGetValue("ChildrenInfo", out var childError))
+                        {
+                            <span class="field-error" role="alert">@childError</span>
+                        }
+                    </div>
+
+                    @if (tourists.Count > 1)
+                    {
+                        <button type="button" class="btn btn--link" @onclick="() => RemoveTourist(t)">Прибрати туриста</button>
+                    }
+                </fieldset>
+            }
+
+            @if (tourists.Count < MaxTourists)
+            {
+                <button type="button" class="btn btn--outline" @onclick="AddTourist">+ Додати туриста</button>
+            }
+
+            <p class="hint">Паспортні дані передаються на сервер у зашифрованому вигляді й не показуються в кабінеті.</p>
+
+            <div class="buybar buybar--form">
+                <div class="buybar__price">
+                    <span class="buybar__label">@Fmt.PersonsLabel(tourists.Count) × @Fmt.Money(tour.BasePrice)</span>
+                    <span class="buybar__value">@Fmt.Money(Total)</span>
+                </div>
+                <button type="submit" class="btn btn--accent btn--lg" disabled="@submitting">
+                    @(submitting ? "Відправляємо…" : "Відправити заявку")
+                </button>
+            </div>
+        </form>
+    }
+</div>
+
+@code {
+    private const int MaxTouristsLimit = 10;
+
+    [Parameter] public int TourId { get; set; }
+    [Parameter] public int GroupId { get; set; }
+
+    private TourResponse? tour;
+    private TourGroupResponse? group;
+    private readonly List<TouristForm> tourists = [new TouristForm()];
+    private BookingResponse? booked;
+    private string? error;
+    private bool loading = true;
+    private bool submitting;
+
+    private int MaxTourists => Math.Max(1, Math.Min(group?.SeatsAvailable ?? 1, MaxTouristsLimit));
+
+    private decimal Total => tourists.Count * (tour?.BasePrice ?? 0);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var details = await Api.GetTourAsync(TourId);
+            tour = details.Tour;
+            group = details.Groups.FirstOrDefault(g => g.Id == GroupId);
+
+            if (group is null)
+                error = "Група не знайдена або виліт уже відбувся.";
+            else if (group.SeatsAvailable <= 0)
+            {
+                error = "У цій групі більше немає вільних місць.";
+                group = null;
+            }
+        }
+        catch (ApiException ex)
+        {
+            error = ex.Message;
+        }
+
+        loading = false;
+    }
+
+    private void AddTourist()
+    {
+        if (tourists.Count < MaxTourists)
+            tourists.Add(new TouristForm());
+    }
+
+    private void RemoveTourist(TouristForm tourist)
+    {
+        if (tourists.Count > 1)
+            tourists.Remove(tourist);
+    }
+
+    private async Task SubmitAsync()
+    {
+        error = null;
+
+        var allValid = true;
+        foreach (var tourist in tourists)
+            allValid &= tourist.Validate();
+
+        if (!allValid)
+        {
+            error = "Перевірте дані туристів: деякі поля заповнені некоректно.";
+            return;
+        }
+
+        submitting = true;
+
+        try
+        {
+            booked = await Api.CreateBookingAsync(GroupId, tourists);
+        }
+        catch (ApiException ex)
+        {
+            error = ex.Message;
+        }
+
+        submitting = false;
+    }
+}

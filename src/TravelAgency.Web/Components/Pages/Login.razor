@@ -1,0 +1,84 @@
+@page "/login"
+@inject ApiClient Api
+@inject AuthSession Session
+@inject NavigationManager Nav
+@inject IHostEnvironment HostEnvironment
+
+<PageTitle>Вхід — TravelAgency</PageTitle>
+
+<div class="container page page--narrow">
+    <h1>Вхід</h1>
+
+    <EditForm Model="form" OnValidSubmit="SubmitAsync" class="panel">
+        <DataAnnotationsValidator />
+
+        @if (error is not null)
+        {
+            <div class="alert alert--error" role="alert">@error</div>
+        }
+
+        <div class="field">
+            <label for="login-email">Електронна пошта</label>
+            <InputText id="login-email" type="email" autocomplete="username" @bind-Value="form.Email" />
+            <ValidationMessage For="() => form.Email" class="field-error" />
+        </div>
+
+        <div class="field">
+            <label for="login-password">Пароль</label>
+            <InputText id="login-password" type="password" autocomplete="current-password" @bind-Value="form.Password" />
+            <ValidationMessage For="() => form.Password" class="field-error" />
+        </div>
+
+        <button type="submit" class="btn btn--accent btn--block" disabled="@submitting">
+            @(submitting ? "Входимо…" : "Увійти")
+        </button>
+
+        <p class="panel__footer">Немає облікового запису? <a href="@RegisterHref">Зареєструватися</a></p>
+    </EditForm>
+
+    @if (HostEnvironment.IsDevelopment())
+    {
+        <div class="hint hint--dev">
+            <strong>Тестові облікові записи (лише розробка):</strong><br />
+            client@travel.local / Client123!<br />
+            manager@travel.local / Manager123!<br />
+            admin@travel.local / Admin123!
+        </div>
+    }
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "returnUrl")] public string? ReturnUrl { get; set; }
+
+    private readonly LoginForm form = new();
+    private string? error;
+    private bool submitting;
+
+    private string RegisterHref =>
+        string.IsNullOrEmpty(ReturnUrl) ? "/register" : "/register?returnUrl=" + Uri.EscapeDataString(ReturnUrl);
+
+    private async Task SubmitAsync()
+    {
+        error = null;
+        submitting = true;
+
+        try
+        {
+            var response = await Api.LoginAsync(form.Email.Trim(), form.Password);
+            await Session.SignInAsync(response);
+            Nav.NavigateTo(SafeReturnUrl(ReturnUrl));
+        }
+        catch (ApiException ex)
+        {
+            error = ex.Message;
+        }
+
+        submitting = false;
+    }
+
+    /// <summary>Дозволяє повернення лише на сторінки цього сайту (захист від відкритого перенаправлення).</summary>
+    private static string SafeReturnUrl(string? url) =>
+        !string.IsNullOrEmpty(url) && url.StartsWith('/') && !url.StartsWith("//") && !url.Contains('\\')
+            ? url
+            : "/account";
+}

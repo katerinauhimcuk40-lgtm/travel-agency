@@ -12,12 +12,38 @@ GET {{TravelAgency.Api_HostAddress}}/api/tours/1
 ### UC-05: пошук груп (країна, ціна, харчування)
 GET {{TravelAgency.Api_HostAddress}}/api/tours/search?country=Turkey&maxPrice=700&mealPlan=AI
 
-### UC-06: створити бронювання (потрібні користувач Id=1 та група Id=1 у БД)
+### UC-02: вхід клієнта (демо-акаунти: client@travel.local / Client123!, manager@travel.local / Manager123!, admin@travel.local / Admin123!)
+# @name loginClient
+POST {{TravelAgency.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "client@travel.local", "password": "Client123!" }
+
+###
+@clientToken = {{loginClient.response.body.$.token}}
+
+### UC-02: вхід менеджера
+# @name loginManager
+POST {{TravelAgency.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "manager@travel.local", "password": "Manager123!" }
+
+###
+@managerToken = {{loginManager.response.body.$.token}}
+
+### UC-01: реєстрація нового клієнта
+POST {{TravelAgency.Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{ "email": "new.client@example.com", "password": "StrongPass1!", "fullName": "Новий Клієнт", "phone": "+380501234567" }
+
+### UC-06: створити бронювання (потрібна група Id=1 у БД; власник — користувач із токена)
 POST {{TravelAgency.Api_HostAddress}}/api/bookings
+Authorization: Bearer {{clientToken}}
 Content-Type: application/json
 
 {
-  "userId": 1,
   "tourGroupId": 1,
   "tourists": [
     { "fullName": "Іваненко Іван Іванович", "passport": "AB123456", "gender": "Male", "age": 35, "childrenInfo": null },
@@ -25,14 +51,21 @@ Content-Type: application/json
   ]
 }
 
-### UC-13: підтвердити бронювання
+### UC-08: мої бронювання
+GET {{TravelAgency.Api_HostAddress}}/api/bookings/my
+Authorization: Bearer {{clientToken}}
+
+### UC-13: підтвердити бронювання (лише менеджер/адміністратор)
 POST {{TravelAgency.Api_HostAddress}}/api/bookings/1/confirm
+Authorization: Bearer {{managerToken}}
 
 ### UC-10: оплатити бронювання (сума = TotalPrice з відповіді на створення)
 POST {{TravelAgency.Api_HostAddress}}/api/bookings/1/pay
+Authorization: Bearer {{clientToken}}
 Content-Type: application/json
 
 { "amount": 1000 }
 
 ### UC-09: скасувати бронювання
 POST {{TravelAgency.Api_HostAddress}}/api/bookings/1/cancel
+Authorization: Bearer {{clientToken}}
