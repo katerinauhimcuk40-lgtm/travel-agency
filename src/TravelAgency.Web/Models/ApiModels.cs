@@ -66,6 +66,71 @@ public record BookingDetailsResponse(
     DateTime? ConfirmedAt,
     List<TouristResponse> Tourists);
 
+// ----- Кабінет менеджера (api/crm) -----
+
+public record CustomerBrief(int Id, string FullName, string Email, string? Phone);
+
+public record BookingSummary(
+    int Id,
+    CustomerBrief Customer,
+    string TourTitle,
+    string Country,
+    string GroupName,
+    DateTime DepartureDate,
+    DateTime ArrivalDate,
+    int PersonsCount,
+    decimal TotalPrice,
+    BookingStatus Status,
+    DateTime CreatedAt);
+
+public record CrmTourist(
+    int Id,
+    string FullName,
+    Gender Gender,
+    int Age,
+    string? ChildrenInfo,
+    string PassportMasked,
+    decimal TicketPrice);
+
+public record PaymentInfo(
+    int Id,
+    decimal Amount,
+    string Currency,
+    PaymentStatus Status,
+    string Provider,
+    DateTime CreatedAt,
+    DateTime? PaidAt);
+
+public record CrmBookingDetails(
+    int Id,
+    CustomerBrief Customer,
+    int TourId,
+    string TourTitle,
+    string Country,
+    string Cities,
+    string GroupName,
+    DateTime DepartureDate,
+    DateTime ArrivalDate,
+    string HotelName,
+    string HotelType,
+    int PersonsCount,
+    decimal TotalPrice,
+    BookingStatus Status,
+    DateTime CreatedAt,
+    DateTime? ConfirmedAt,
+    DateTime? CancelledAt,
+    List<CrmTourist> Tourists,
+    List<PaymentInfo> Payments);
+
+public record CustomerInfo(
+    int Id,
+    string Email,
+    string FullName,
+    string? Phone,
+    bool IsActive,
+    DateTime CreatedAt,
+    int BookingsCount);
+
 /// <summary>Параметри пошуку турів (GET api/tours/search).</summary>
 public record TourSearchQuery(
     string? Country,

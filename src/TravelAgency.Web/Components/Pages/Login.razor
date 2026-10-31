@@ -66,7 +66,7 @@
         {
             var response = await Api.LoginAsync(form.Email.Trim(), form.Password);
             await Session.SignInAsync(response);
-            Nav.NavigateTo(SafeReturnUrl(ReturnUrl));
+            Nav.NavigateTo(SafeReturnUrl(ReturnUrl, response.Role));
         }
         catch (ApiException ex)
         {
@@ -77,8 +77,8 @@
     }
 
     /// <summary>Дозволяє повернення лише на сторінки цього сайту (захист від відкритого перенаправлення).</summary>
-    private static string SafeReturnUrl(string? url) =>
+    private static string SafeReturnUrl(string? url, Role role) =>
         !string.IsNullOrEmpty(url) && url.StartsWith('/') && !url.StartsWith("//") && !url.Contains('\\')
             ? url
-            : "/account";
+            : (role == Role.Client ? "/account" : "/staff/bookings");
 }

@@ -1,0 +1,31 @@
+warning: in the working copy of 'docs/02-design.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/TravelAgency.Api/Program.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/TravelAgency.Core/Interfaces/IBookingRepository.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/TravelAgency.Core/Interfaces/IUnitOfWork.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/TravelAgency.Infrastructure/Repositories/BookingRepository.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/TravelAgency.Infrastructure/Repositories/UnitOfWork.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/TravelAgency.Web/Components/Layout/MainLayout.razor', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/TravelAgency.Web/Components/Pages/Account.razor', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/TravelAgency.Web/Components/Pages/Login.razor', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/TravelAgency.Web/Components/Routes.razor', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/TravelAgency.Web/Models/ApiModels.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/TravelAgency.Web/Models/FormModels.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/TravelAgency.Web/Services/ApiClient.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/TravelAgency.Web/Services/Fmt.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/TravelAgency.Web/wwwroot/app.css', LF will be replaced by CRLF the next time Git touches it
+ docs/02-design.md                                  |  4 [32m+[m[31m-[m
+ src/TravelAgency.Api/Program.cs                    |  1 [32m+[m
+ .../Interfaces/IBookingRepository.cs               |  7 [32m+++[m
+ src/TravelAgency.Core/Interfaces/IUnitOfWork.cs    |  2 [32m+[m[31m-[m
+ .../Repositories/BookingRepository.cs              | 40 [32m+++++++++++++[m
+ .../Repositories/UnitOfWork.cs                     |  4 [32m+[m[31m-[m
+ .../Components/Layout/MainLayout.razor             | 10 [32m++++[m
+ .../Components/Pages/Account.razor                 |  4 [32m+[m[31m-[m
+ src/TravelAgency.Web/Components/Pages/Login.razor  |  6 [32m+[m[31m-[m
+ src/TravelAgency.Web/Components/Routes.razor       | 15 [32m++++[m[31m-[m
+ src/TravelAgency.Web/Models/ApiModels.cs           | 65 [32m++++++++++++++++++++++[m
+ src/TravelAgency.Web/Models/FormModels.cs          |  7 [32m+++[m
+ src/TravelAgency.Web/Services/ApiClient.cs         | 36 [32m++++++++++++[m
+ src/TravelAgency.Web/Services/Fmt.cs               | 17 [32m++++++[m
+ src/TravelAgency.Web/wwwroot/app.css               | 40 [32m+++++++++++++[m
+ 15 files changed, 247 insertions(+), 11 deletions(-)

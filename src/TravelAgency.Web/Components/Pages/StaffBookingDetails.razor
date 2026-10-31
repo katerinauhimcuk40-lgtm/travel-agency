@@ -1,0 +1,254 @@
+@page "/staff/bookings/{Id:int}"
+@attribute [Authorize(Roles = "Manager,Admin")]
+@inject ApiClient Api
+
+<PageTitle>Заявка №@Id — TravelAgency</PageTitle>
+
+<div class="container page">
+    <a class="back-link" href="/staff/bookings">← До списку заявок</a>
+
+    @if (notice is not null)
+    {
+        <div class="alert alert--success" role="status">@notice</div>
+    }
+    @if (actionError is not null)
+    {
+        <div class="alert alert--error" role="alert">@actionError</div>
+    }
+
+    @if (loading)
+    {
+        <p class="state">Завантаження…</p>
+    }
+    else if (loadError is not null)
+    {
+        <div class="alert alert--error" role="alert">@loadError</div>
+    }
+    else if (booking is not null)
+    {
+        <div class="booking__head">
+            <h1>Заявка №@booking.Id</h1>
+            <StatusBadge Status="booking.Status" />
+        </div>
+
+        <div class="detail-grid">
+            <section class="panel">
+                <h2>Тур</h2>
+                <dl class="facts">
+                    <div><dt>Назва</dt><dd>@booking.TourTitle</dd></div>
+                    <div><dt>Напрямок</dt><dd>@Fmt.Country(booking.Country) · @booking.Cities</dd></div>
+                    <div><dt>Група</dt><dd>@booking.GroupName</dd></div>
+                    <div><dt>Дати</dt><dd>@Fmt.DateRange(booking.DepartureDate, booking.ArrivalDate)</dd></div>
+                    <div><dt>Готель</dt><dd>@booking.HotelName, @Fmt.Stars(booking.HotelType)</dd></div>
+                    <div><dt>Туристи</dt><dd>@Fmt.PersonsLabel(booking.PersonsCount)</dd></div>
+                    <div><dt>Сума</dt><dd class="booking__total">@Fmt.Money(booking.TotalPrice)</dd></div>
+                </dl>
+            </section>
+
+            <section class="panel">
+                <h2>Клієнт</h2>
+                <dl class="facts">
+                    <div><dt>Ім'я</dt><dd>@booking.Customer.FullName</dd></div>
+                    <div><dt>Пошта</dt><dd><a href="@($"mailto:{booking.Customer.Email}")">@booking.Customer.Email</a></dd></div>
+                    <div><dt>Телефон</dt><dd>@(string.IsNullOrWhiteSpace(booking.Customer.Phone) ? "не вказано" : booking.Customer.Phone)</dd></div>
+                    <div><dt>Усі заявки клієнта</dt><dd><a href="@($"/staff/bookings?q={Uri.EscapeDataString(booking.Customer.Email)}")">Переглянути</a></dd></div>
+                </dl>
+
+                <h2 class="panel__subtitle">Історія</h2>
+                <dl class="facts">
+                    <div><dt>Створено</dt><dd>@Fmt.DateTimeShort(booking.CreatedAt)</dd></div>
+                    @if (booking.ConfirmedAt is { } confirmedAt)
+                    {
+                        <div><dt>Підтверджено</dt><dd>@Fmt.DateTimeShort(confirmedAt)</dd></div>
+                    }
+                    @if (booking.CancelledAt is { } cancelledAt)
+                    {
+                        <div><dt>Скасовано</dt><dd>@Fmt.DateTimeShort(cancelledAt)</dd></div>
+                    }
+                </dl>
+            </section>
+        </div>
+
+        <section class="panel">
+            <h2>Дії</h2>
+
+            @if (confirmCancel)
+            {
+                <div class="confirm" role="alertdialog" aria-label="Підтвердження скасування">
+                    <p>Скасувати заявку №@booking.Id? Місця в групі буде звільнено.</p>
+                    <div class="actions">
+                        <button type="button" class="btn btn--danger" disabled="@busy" @onclick="CancelAsync">Так, скасувати</button>
+                        <button type="button" class="btn btn--outline" disabled="@busy" @onclick="() => confirmCancel = false">Залишити</button>
+                    </div>
+                </div>
+            }
+            else if (booking.Status is BookingStatus.New or BookingStatus.Confirmed)
+            {
+                <div class="actions">
+                    @if (booking.Status == BookingStatus.New)
+                    {
+                        <button type="button" class="btn btn--accent" disabled="@busy" @onclick="ConfirmAsync">@(busy ? "Обробка…" : "Підтвердити заявку")</button>
+                    }
+                    <button type="button" class="btn btn--outline" disabled="@busy" @onclick="() => confirmCancel = true">Скасувати заявку</button>
+                </div>
+                @if (booking.Status == BookingStatus.New)
+                {
+                    <p class="hint">Після підтвердження клієнт зможе оплатити тур у своєму кабінеті.</p>
+                }
+                else
+                {
+                    <p class="hint">Заявку підтверджено, очікуємо оплату від клієнта.</p>
+                }
+            }
+            else
+            {
+                <p class="muted">Для заявки зі статусом «@Fmt.Status(booking.Status)» дії недоступні.</p>
+            }
+        </section>
+
+        <section class="panel">
+            <h2>Туристи</h2>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <caption class="visually-hidden">Туристи в заявці</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Прізвище та ім'я</th>
+                            <th scope="col">Стать</th>
+                            <th scope="col">Вік</th>
+                            <th scope="col">Паспорт</th>
+                            <th scope="col">Вартість</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var t in booking.Tourists)
+                        {
+                            <tr>
+                                <td data-label="Прізвище та ім'я">
+                                    <div>@t.FullName</div>
+                                    @if (!string.IsNullOrWhiteSpace(t.ChildrenInfo))
+                                    {
+                                        <div class="muted small">@t.ChildrenInfo</div>
+                                    }
+                                </td>
+                                <td data-label="Стать">@Fmt.GenderLabel(t.Gender)</td>
+                                <td data-label="Вік">@t.Age</td>
+                                <td data-label="Паспорт"><code>@t.PassportMasked</code></td>
+                                <td data-label="Вартість">@Fmt.Money(t.TicketPrice)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <p class="hint">Повні паспортні дані зберігаються в зашифрованому вигляді й тут не показуються.</p>
+        </section>
+
+        <section class="panel">
+            <h2>Оплати</h2>
+            @if (booking.Payments.Count == 0)
+            {
+                <p class="muted">Оплат ще немає.</p>
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <caption class="visually-hidden">Оплати за заявкою</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Дата</th>
+                                <th scope="col">Сума</th>
+                                <th scope="col">Статус</th>
+                                <th scope="col">Шлюз</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in booking.Payments)
+                            {
+                                <tr>
+                                    <td data-label="Дата">@Fmt.DateTimeShort(p.PaidAt ?? p.CreatedAt)</td>
+                                    <td data-label="Сума">@Fmt.Money(p.Amount) (@p.Currency)</td>
+                                    <td data-label="Статус">@Fmt.PaymentLabel(p.Status)</td>
+                                    <td data-label="Шлюз">@p.Provider</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private CrmBookingDetails? booking;
+    private bool loading = true;
+    private bool busy;
+    private bool confirmCancel;
+    private string? loadError;
+    private string? actionError;
+    private string? notice;
+
+    protected override async Task OnParametersSetAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        loading = booking is null;
+        loadError = null;
+
+        try
+        {
+            booking = await Api.GetCrmBookingAsync(Id);
+        }
+        catch (ApiException ex)
+        {
+            booking = null;
+            loadError = ex.Message;
+        }
+
+        loading = false;
+    }
+
+    private async Task ConfirmAsync()
+    {
+        busy = true;
+        notice = null;
+        actionError = null;
+
+        try
+        {
+            await Api.ConfirmBookingAsync(Id);
+            notice = $"Заявку №{Id} підтверджено. Клієнт може її оплатити.";
+            await LoadAsync();
+        }
+        catch (ApiException ex)
+        {
+            actionError = ex.Message;
+        }
+
+        busy = false;
+    }
+
+    private async Task CancelAsync()
+    {
+        busy = true;
+        notice = null;
+        actionError = null;
+
+        try
+        {
+            await Api.CancelBookingAsync(Id);
+            notice = $"Заявку №{Id} скасовано, місця в групі звільнено.";
+            await LoadAsync();
+        }
+        catch (ApiException ex)
+        {
+            actionError = ex.Message;
+        }
+
+        confirmCancel = false;
+        busy = false;
+    }
+}

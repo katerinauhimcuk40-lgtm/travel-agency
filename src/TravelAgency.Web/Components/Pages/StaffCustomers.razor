@@ -1,0 +1,144 @@
+@page "/staff/customers"
+@attribute [Authorize(Roles = "Manager,Admin")]
+@inject ApiClient Api
+@inject NavigationManager Nav
+
+<PageTitle>Клієнти — TravelAgency</PageTitle>
+
+<div class="container page">
+    <h1>Клієнти</h1>
+
+    <EditForm Model="form" OnSubmit="ApplyAsync" class="toolbar toolbar--search">
+        <div class="field">
+            <label for="cu-search">Пошук за іменем або поштою</label>
+            <InputText id="cu-search" @bind-Value="form.Customer" placeholder="Наприклад, Іваненко" />
+        </div>
+        <div class="toolbar__actions">
+            <button type="button" class="btn btn--outline" @onclick="ResetAsync">Скинути</button>
+            <button type="submit" class="btn btn--primary">Знайти</button>
+        </div>
+    </EditForm>
+
+    @if (error is not null)
+    {
+        <div class="alert alert--error" role="alert">@error</div>
+    }
+    else if (loading)
+    {
+        <p class="state">Завантаження…</p>
+    }
+    else if (result is null || result.Items.Count == 0)
+    {
+        <div class="empty">
+            <h2>Клієнтів не знайдено</h2>
+            <p class="muted">Спробуйте інший запит.</p>
+        </div>
+    }
+    else
+    {
+        <p class="results__count">Знайдено клієнтів: @result.TotalCount</p>
+
+        <div class="table-wrap">
+            <table class="data-table">
+                <caption class="visually-hidden">Список клієнтів</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Клієнт</th>
+                        <th scope="col">Телефон</th>
+                        <th scope="col">Зареєстровано</th>
+                        <th scope="col">Заявок</th>
+                        <th scope="col">Обліковий запис</th>
+                        <th scope="col"><span class="visually-hidden">Дії</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in result.Items)
+                    {
+                        <tr>
+                            <td data-label="Клієнт">
+                                <div>@c.FullName</div>
+                                <div class="muted small">@c.Email</div>
+                            </td>
+                            <td data-label="Телефон">@(string.IsNullOrWhiteSpace(c.Phone) ? "—" : c.Phone)</td>
+                            <td data-label="Зареєстровано">@Fmt.Date(c.CreatedAt)</td>
+                            <td data-label="Заявок">@c.BookingsCount</td>
+                            <td data-label="Обліковий запис">
+                                <span class="badge @(c.IsActive ? "badge--paid" : "badge--cancelled")">@(c.IsActive ? "Активний" : "Заблокований")</span>
+                            </td>
+                            <td class="data-table__action">
+                                <a class="btn btn--outline btn--sm" href="@($"/staff/bookings?q={Uri.EscapeDataString(c.Email)}")">Заявки</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (result.TotalPages > 1)
+        {
+            <nav class="pager" aria-label="Сторінки списку клієнтів">
+                <button type="button" class="btn btn--outline btn--sm" disabled="@(result.Page <= 1)" @onclick="() => GoToPage(result.Page - 1)">← Назад</button>
+                <span class="pager__info">Сторінка @result.Page з @result.TotalPages</span>
+                <button type="button" class="btn btn--outline btn--sm" disabled="@(result.Page >= result.TotalPages)" @onclick="() => GoToPage(result.Page + 1)">Далі →</button>
+            </nav>
+        }
+    }
+</div>
+
+@code {
+    private const int PageSize = 10;
+
+    [SupplyParameterFromQuery(Name = "q")] public string? SearchQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "page")] public int? PageQuery { get; set; }
+
+    private BookingFilterForm form = new();
+    private PagedResponse<CustomerInfo>? result;
+    private string? error;
+    private bool loading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        form = new BookingFilterForm { Customer = SearchQuery };
+
+        loading = true;
+        error = null;
+
+        try
+        {
+            result = await Api.GetCrmCustomersAsync(SearchQuery, Math.Max(1, PageQuery ?? 1), PageSize);
+        }
+        catch (ApiException ex)
+        {
+            result = null;
+            error = ex.Message;
+        }
+
+        loading = false;
+    }
+
+    private string BuildUrl(int page)
+    {
+        var parts = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(form.Customer))
+            parts.Add($"q={Uri.EscapeDataString(form.Customer.Trim())}");
+        if (page > 1)
+            parts.Add($"page={page}");
+
+        return parts.Count == 0 ? "/staff/customers" : "/staff/customers?" + string.Join("&", parts);
+    }
+
+    private Task ApplyAsync()
+    {
+        Nav.NavigateTo(BuildUrl(1));
+        return Task.CompletedTask;
+    }
+
+    private Task ResetAsync()
+    {
+        Nav.NavigateTo("/staff/customers");
+        return Task.CompletedTask;
+    }
+
+    private void GoToPage(int page) => Nav.NavigateTo(BuildUrl(page));
+}
