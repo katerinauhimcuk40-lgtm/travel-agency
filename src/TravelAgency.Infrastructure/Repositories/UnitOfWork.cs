@@ -12,7 +12,7 @@ public class UnitOfWork : IUnitOfWork
     public ITourRepository Tours { get; }
     public IRepository<Hotel> Hotels { get; }
     public ITourGroupRepository TourGroups { get; }
-    public IRepository<Booking> Bookings { get; }
+    public IBookingRepository Bookings { get; }
     public IRepository<Tourist> Tourists { get; }
     public IRepository<Payment> Payments { get; }
 
@@ -23,7 +23,7 @@ public class UnitOfWork : IUnitOfWork
         Tours = new TourRepository(_context);
         Hotels = new Repository<Hotel>(_context);
         TourGroups = new TourGroupRepository(_context);
-        Bookings = new Repository<Booking>(_context);
+        Bookings = new BookingRepository(_context);
         Tourists = new Repository<Tourist>(_context);
         Payments = new Repository<Payment>(_context);
     }

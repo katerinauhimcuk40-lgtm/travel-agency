@@ -1,0 +1,139 @@
+@page "/"
+@inject ApiClient Api
+@inject NavigationManager Nav
+
+<PageTitle>TravelAgency — подорожі за вашими датами</PageTitle>
+
+<section class="hero">
+    <div class="container">
+        <h1 class="hero__title">Знайдіть свій ідеальний відпочинок</h1>
+        <p class="hero__lead">Тури за напрямками, датами та бюджетом. Бронювання онлайн цілодобово.</p>
+
+        <EditForm Model="form" OnSubmit="Search" class="search-card">
+            <div class="field">
+                <label for="home-country">Країна</label>
+                <InputSelect id="home-country" @bind-Value="form.Country">
+                    <option value="">Усі країни</option>
+                    @foreach (var country in countries)
+                    {
+                        <option value="@country">@Fmt.Country(country)</option>
+                    }
+                </InputSelect>
+            </div>
+            <div class="field-row">
+                <div class="field">
+                    <label for="home-from">Виліт від</label>
+                    <InputDate id="home-from" @bind-Value="form.From" />
+                </div>
+                <div class="field">
+                    <label for="home-max">Бюджет на особу до, ₴</label>
+                    <InputNumber id="home-max" @bind-Value="form.MaxPrice" placeholder="30 000" />
+                </div>
+            </div>
+            <button type="submit" class="btn btn--accent btn--block">Знайти тури</button>
+        </EditForm>
+    </div>
+</section>
+
+<div class="container">
+    @if (error is not null)
+    {
+        <div class="alert alert--error" role="alert">@error</div>
+    }
+
+    @if (countries.Count > 0)
+    {
+        <section class="section">
+            <h2>Популярні напрямки</h2>
+            <div class="chips">
+                @foreach (var country in countries)
+                {
+                    <a class="chip chip--link" href="@($"/tours?country={Uri.EscapeDataString(country)}")">@Fmt.Country(country)</a>
+                }
+            </div>
+        </section>
+    }
+
+    @if (!loaded)
+    {
+        <p class="state">Завантаження пропозицій…</p>
+    }
+    else if (offers.Count > 0)
+    {
+        <section class="section">
+            <h2>Найближчі вильоти</h2>
+            <div class="card-grid">
+                @foreach (var offer in offers)
+                {
+                    <TourCard Item="offer" />
+                }
+            </div>
+            <p class="section__more"><a href="/tours">Усі тури →</a></p>
+        </section>
+    }
+
+    <section class="section">
+        <h2>Чому з нами зручно</h2>
+        <div class="features">
+            <div class="feature">
+                <span class="feature__icon" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+                </span>
+                <div>
+                    <h3>Бронювання цілодобово</h3>
+                    <p>Оформлюйте заявку на сайті у зручний для вас час.</p>
+                </div>
+            </div>
+            <div class="feature">
+                <span class="feature__icon" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2" /><path d="M7 11V8a5 5 0 0 1 10 0v3" /></svg>
+                </span>
+                <div>
+                    <h3>Захист даних</h3>
+                    <p>Паспортні дані шифруються, а паролі зберігаються лише як хеші.</p>
+                </div>
+            </div>
+            <div class="feature">
+                <span class="feature__icon" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10" /></svg>
+                </span>
+                <div>
+                    <h3>Підтвердження менеджером</h3>
+                    <p>Кожну заявку перевіряє менеджер, і лише після цього відкривається оплата.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+@code {
+    private readonly TourFilterForm form = new();
+    private List<string> countries = [];
+    private List<TourSearchItem> offers = [];
+    private string? error;
+    private bool loaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var tours = await Api.GetToursAsync();
+            countries = tours.Items
+                .Select(t => t.Country)
+                .Distinct()
+                .OrderBy(c => Fmt.Country(c))
+                .ToList();
+
+            var found = await Api.SearchToursAsync(new TourSearchQuery(null, null, null, null, null, null, null, 1, 3));
+            offers = found.Items.ToList();
+        }
+        catch (ApiException ex)
+        {
+            error = ex.Message;
+        }
+
+        loaded = true;
+    }
+
+    private void Search() => Nav.NavigateTo(form.ToQueryString());
+}

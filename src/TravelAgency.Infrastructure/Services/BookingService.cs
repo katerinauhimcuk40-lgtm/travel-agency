@@ -81,6 +81,17 @@ public class BookingService : IBookingService
         await _unitOfWork.SaveChangesAsync();
     }
 
+    public async Task<Booking> GetBookingAsync(int bookingId)
+    {
+        return await _unitOfWork.Bookings.GetWithDetailsAsync(bookingId)
+            ?? throw new KeyNotFoundException("Booking not found");
+    }
+
+    public async Task<IReadOnlyList<Booking>> GetUserBookingsAsync(int userId)
+    {
+        return await _unitOfWork.Bookings.GetByUserWithDetailsAsync(userId);
+    }
+
     public async Task ConfirmBookingAsync(int bookingId)
     {
         var booking = await _unitOfWork.Bookings.GetByIdAsync(bookingId)

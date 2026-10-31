@@ -1,7 +1,11 @@
+using System.Text;
 using System.Text.Json.Serialization;
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
+using TravelAgency.Api.Auth;
 using TravelAgency.Api.Middleware;
 using TravelAgency.Core.Interfaces;
 using TravelAgency.Infrastructure.Data;
@@ -34,6 +38,43 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<ITourCatalogService, TourCatalogService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+// JWT-автентифікація. Ключ для розробки — в appsettings.Development.json, у робочому середовищі — змінна Jwt__Key.
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
+builder.Services.AddSingleton<ITokenService, JwtTokenService>();
+
+var jwt = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
+if (string.IsNullOrWhiteSpace(jwt.Key) || jwt.Key.Length < 32)
+    throw new InvalidOperationException("Configuration value 'Jwt:Key' must be at least 32 characters long.");
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        // Claim-и в токені мають короткі імена (sub, name, role), тому автоматичне перейменування вимкнено
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwt.Issuer,
+            ValidateAudience = true,
+            ValidAudience = jwt.Audience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key)),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(1),
+            NameClaimType = "name",
+            RoleClaimType = "role"
+        };
+    });
+builder.Services.AddAuthorization();
+
+// CORS для веб-клієнта (адреси задаються в Cors:AllowedOrigins)
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+builder.Services.AddCors(options =>
+    options.AddPolicy("Web", policy =>
+        policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod()));
 
 builder.Services.AddHealthChecks();
 
@@ -58,9 +99,15 @@ if (app.Environment.IsDevelopment())
     await db.Database.MigrateAsync();
     await DbSeeder.SeedAsync(db);
 }
+else
+{
+    // У розробці веб-клієнт звертається до API по http, тому переадресацію на https вмикаємо лише в робочому середовищі
+    app.UseHttpsRedirection();
+}
 
-app.UseHttpsRedirection();
+app.UseCors("Web");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

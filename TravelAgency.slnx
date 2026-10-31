@@ -3,6 +3,7 @@
     <Project Path="src/TravelAgency.Api/TravelAgency.Api.csproj" />
     <Project Path="src/TravelAgency.Core/TravelAgency.Core.csproj" />
     <Project Path="src/TravelAgency.Infrastructure/TravelAgency.Infrastructure.csproj" />
+    <Project Path="src/TravelAgency.Web/TravelAgency.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/TravelAgency.Tests/TravelAgency.Tests.csproj" />

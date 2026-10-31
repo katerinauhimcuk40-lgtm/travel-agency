@@ -1,0 +1,76 @@
+@inherits LayoutComponentBase
+@inject AuthSession Session
+@inject NavigationManager Nav
+
+<header class="site-header">
+    <div class="container site-header__row">
+        <a class="brand" href="/">TravelAgency</a>
+
+        <nav class="topnav" aria-label="Основна навігація">
+            <NavLink class="topnav__link" href="/" Match="NavLinkMatch.All">Головна</NavLink>
+            <NavLink class="topnav__link" href="/tours">Каталог</NavLink>
+            <AuthorizeView>
+                <Authorized>
+                    <NavLink class="topnav__link" href="/account">Мої бронювання</NavLink>
+                </Authorized>
+            </AuthorizeView>
+        </nav>
+
+        <div class="header-actions">
+            <AuthorizeView>
+                <Authorized>
+                    <span class="header-user">@context.User.Identity?.Name</span>
+                    <button type="button" class="btn btn--outline-light btn--sm" @onclick="SignOutAsync">Вийти</button>
+                </Authorized>
+                <NotAuthorized>
+                    <a class="btn btn--outline-light btn--sm" href="/login">Увійти</a>
+                    <a class="btn btn--accent btn--sm hide-mobile" href="/register">Реєстрація</a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+    </div>
+</header>
+
+<main id="main" class="site-main">
+    @Body
+</main>
+
+<footer class="site-footer">
+    <div class="container">
+        <span>© 2026 TravelAgency</span>
+        <span>Навчальний проєкт · ІПЗ-32 · ЗУНУ</span>
+    </div>
+</footer>
+
+<nav class="bottomnav" aria-label="Мобільна навігація">
+    <NavLink class="bottomnav__link" href="/" Match="NavLinkMatch.All">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8v10H3z" /></svg>
+        Головна
+    </NavLink>
+    <NavLink class="bottomnav__link" href="/tours">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+        Каталог
+    </NavLink>
+    <AuthorizeView>
+        <Authorized>
+            <NavLink class="bottomnav__link" href="/account">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 4-6 8-6s8 2 8 6" /></svg>
+                Кабінет
+            </NavLink>
+        </Authorized>
+        <NotAuthorized>
+            <NavLink class="bottomnav__link" href="/login">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 4-6 8-6s8 2 8 6" /></svg>
+                Увійти
+            </NavLink>
+        </NotAuthorized>
+    </AuthorizeView>
+</nav>
+
+@code {
+    private async Task SignOutAsync()
+    {
+        await Session.SignOutAsync();
+        Nav.NavigateTo("/");
+    }
+}

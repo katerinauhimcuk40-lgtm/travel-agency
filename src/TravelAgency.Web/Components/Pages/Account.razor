@@ -1,0 +1,216 @@
+@page "/account"
+@attribute [Authorize]
+@inject ApiClient Api
+
+<PageTitle>Мої бронювання — TravelAgency</PageTitle>
+
+<div class="container page">
+    <h1>Мої бронювання</h1>
+
+    <AuthorizeView Roles="Manager,Admin">
+        <div class="alert alert--info" role="status">
+            Ви увійшли як співробітник. Інструменти менеджера та адміністратора (заявки, клієнти, керування турами) з'являться на наступному етапі,
+            а тут показано ваші власні бронювання.
+        </div>
+    </AuthorizeView>
+
+    @if (notice is not null)
+    {
+        <div class="alert alert--success" role="status">@notice</div>
+    }
+    @if (actionError is not null)
+    {
+        <div class="alert alert--error" role="alert">@actionError</div>
+    }
+
+    @if (loading)
+    {
+        <p class="state">Завантаження…</p>
+    }
+    else if (loadError is not null)
+    {
+        <div class="alert alert--error" role="alert">@loadError</div>
+        <button type="button" class="btn btn--primary" @onclick="LoadAsync">Спробувати ще раз</button>
+    }
+    else if (bookings.Count == 0)
+    {
+        <div class="empty">
+            <h2>Бронювань поки немає</h2>
+            <p class="muted">Оберіть тур у каталозі, і заявка з'явиться тут.</p>
+            <a class="btn btn--primary" href="/tours">Перейти до каталогу</a>
+        </div>
+    }
+    else
+    {
+        <div class="booking-list">
+            @foreach (var b in bookings)
+            {
+                var busy = busyId == b.Id;
+
+                <article class="booking">
+                    <header class="booking__head">
+                        <div>
+                            <h2 class="booking__title">@b.TourTitle</h2>
+                            <p class="booking__place">@Fmt.Country(b.Country) · @b.Cities</p>
+                        </div>
+                        <StatusBadge Status="b.Status" />
+                    </header>
+
+                    <dl class="booking__facts">
+                        <div><dt>Номер</dt><dd>№@b.Id</dd></div>
+                        <div><dt>Дати</dt><dd>@Fmt.DateRange(b.DepartureDate, b.ArrivalDate)</dd></div>
+                        <div><dt>Готель</dt><dd>@b.HotelName, @Fmt.Stars(b.HotelType)</dd></div>
+                        <div><dt>Туристи</dt><dd>@Fmt.PersonsLabel(b.PersonsCount)</dd></div>
+                        <div><dt>Створено</dt><dd>@Fmt.Date(b.CreatedAt.ToLocalTime())</dd></div>
+                        <div><dt>До сплати</dt><dd class="booking__total">@Fmt.Money(b.TotalPrice)</dd></div>
+                    </dl>
+
+                    @if (b.Tourists.Count > 0)
+                    {
+                        <details class="booking__tourists">
+                            <summary>Список туристів (@b.Tourists.Count)</summary>
+                            <ul>
+                                @foreach (var t in b.Tourists)
+                                {
+                                    <li>@t.FullName, @t.Age @Fmt.Plural(t.Age, "рік", "роки", "років")</li>
+                                }
+                            </ul>
+                        </details>
+                    }
+
+                    @if (b.Status == BookingStatus.New)
+                    {
+                        <p class="hint">Менеджер перевіряє заявку. Після підтвердження тут з'явиться кнопка оплати.</p>
+                    }
+
+                    @if (confirmCancelId == b.Id)
+                    {
+                        <div class="confirm" role="alertdialog" aria-label="Підтвердження скасування">
+                            <p>Скасувати бронювання №@b.Id? Місця в групі буде звільнено.</p>
+                            <div class="actions">
+                                <button type="button" class="btn btn--danger" disabled="@busy" @onclick="() => CancelAsync(b)">Так, скасувати</button>
+                                <button type="button" class="btn btn--outline" disabled="@busy" @onclick="() => confirmCancelId = null">Залишити</button>
+                            </div>
+                        </div>
+                    }
+                    else if (confirmPayId == b.Id)
+                    {
+                        <div class="confirm" role="alertdialog" aria-label="Підтвердження оплати">
+                            <p>Сплатити <strong>@Fmt.Money(b.TotalPrice)</strong> за бронювання №@b.Id?</p>
+                            <p class="muted">Це демонстраційна оплата через тестовий платіжний шлюз: реальні гроші не списуються, картка не потрібна.</p>
+                            <div class="actions">
+                                <button type="button" class="btn btn--accent" disabled="@busy" @onclick="() => PayAsync(b)">@(busy ? "Обробка…" : "Сплатити")</button>
+                                <button type="button" class="btn btn--outline" disabled="@busy" @onclick="() => confirmPayId = null">Назад</button>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="actions">
+                            @if (b.Status == BookingStatus.Confirmed)
+                            {
+                                <button type="button" class="btn btn--accent" @onclick="() => AskPay(b)">Оплатити</button>
+                            }
+                            @if (b.Status is BookingStatus.New or BookingStatus.Confirmed)
+                            {
+                                <button type="button" class="btn btn--outline" @onclick="() => AskCancel(b)">Скасувати бронювання</button>
+                            }
+                        </div>
+                    }
+                </article>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<BookingDetailsResponse> bookings = [];
+    private bool loading = true;
+    private string? loadError;
+    private string? actionError;
+    private string? notice;
+    private int? busyId;
+    private int? confirmCancelId;
+    private int? confirmPayId;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        loadError = null;
+
+        try
+        {
+            bookings = await Api.GetMyBookingsAsync();
+        }
+        catch (ApiException ex)
+        {
+            loadError = ex.Message;
+        }
+
+        loading = false;
+    }
+
+    private void AskCancel(BookingDetailsResponse booking)
+    {
+        ClearMessages();
+        confirmPayId = null;
+        confirmCancelId = booking.Id;
+    }
+
+    private void AskPay(BookingDetailsResponse booking)
+    {
+        ClearMessages();
+        confirmCancelId = null;
+        confirmPayId = booking.Id;
+    }
+
+    private async Task CancelAsync(BookingDetailsResponse booking)
+    {
+        busyId = booking.Id;
+        ClearMessages();
+
+        try
+        {
+            await Api.CancelBookingAsync(booking.Id);
+            notice = $"Бронювання №{booking.Id} скасовано.";
+            confirmCancelId = null;
+            await LoadAsync();
+        }
+        catch (ApiException ex)
+        {
+            actionError = ex.Message;
+            confirmCancelId = null;
+        }
+
+        busyId = null;
+    }
+
+    private async Task PayAsync(BookingDetailsResponse booking)
+    {
+        busyId = booking.Id;
+        ClearMessages();
+
+        try
+        {
+            await Api.PayBookingAsync(booking.Id, booking.TotalPrice);
+            notice = $"Оплату бронювання №{booking.Id} прийнято. Дякуємо!";
+            confirmPayId = null;
+            await LoadAsync();
+        }
+        catch (ApiException ex)
+        {
+            actionError = ex.Message;
+            confirmPayId = null;
+        }
+
+        busyId = null;
+    }
+
+    private void ClearMessages()
+    {
+        notice = null;
+        actionError = null;
+    }
+}

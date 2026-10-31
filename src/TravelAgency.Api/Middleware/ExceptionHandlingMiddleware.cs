@@ -30,6 +30,7 @@ public class ExceptionHandlingMiddleware
     {
         var (status, title) = ex switch
         {
+            UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized"),
             KeyNotFoundException => (StatusCodes.Status404NotFound, "Resource not found"),
             InvalidOperationException => (StatusCodes.Status409Conflict, "Business rule violation"),
             ArgumentException => (StatusCodes.Status400BadRequest, "Invalid request"),

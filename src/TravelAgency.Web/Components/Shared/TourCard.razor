@@ -1,0 +1,26 @@
+<a class="tour-card" href="@Href">
+    <TourArt Seed="@Item.Tour.Country" Height="150" />
+    <div class="tour-card__body">
+        <div class="tour-card__badges">
+            <span class="chip chip--teal">@Fmt.Meal(Item.Tour.MealPlan)</span>
+            <span class="chip">@Fmt.NightsLabel(Item.Group.DepartureDate, Item.Group.ArrivalDate)</span>
+        </div>
+        <h3 class="tour-card__title">@Item.Tour.Title</h3>
+        <p class="tour-card__place">@Fmt.Country(Item.Tour.Country) · @Item.Tour.Cities</p>
+        @if (Item.Group.Hotel is not null)
+        {
+            <p class="tour-card__meta">@Item.Group.Hotel.Name · @Fmt.Stars(Item.Group.Hotel.HotelType)</p>
+        }
+        <p class="tour-card__meta">Виліт @Fmt.Date(Item.Group.DepartureDate)</p>
+        <div class="tour-card__footer">
+            <span class="price">від @Fmt.Money(Item.Tour.BasePrice) <small>/ особа</small></span>
+            <span class="seats @(Item.Group.SeatsAvailable is > 0 and <= 5 ? "seats--low" : "")">@Fmt.Seats(Item.Group.SeatsAvailable)</span>
+        </div>
+    </div>
+</a>
+
+@code {
+    [Parameter, EditorRequired] public TourSearchItem Item { get; set; } = default!;
+
+    private string Href => $"/tours/{Item.Tour.Id}?group={Item.Group.Id}";
+}

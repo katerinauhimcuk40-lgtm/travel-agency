@@ -17,16 +17,44 @@ public static class DbSeeder
     private static async Task SeedUsersAsync(TravelAgencyDbContext context)
     {
         if (await context.Users.AnyAsync())
+        {
+            await UpgradePlaceholderPasswordsAsync(context);
             return;
+        }
 
-        // PasswordHash "!" — недійсний хеш: вхід для цих користувачів стане можливим після додавання автентифікації.
+        // Демо-акаунти для розробки (пароль див. DemoPasswords)
         context.Users.AddRange(
-            new User { Email = "client@travel.local", FullName = "Тестовий Клієнт", Role = Role.Client, PasswordHash = "!" },
-            new User { Email = "manager@travel.local", FullName = "Тестовий Менеджер", Role = Role.Manager, PasswordHash = "!" },
-            new User { Email = "admin@travel.local", FullName = "Тестовий Адміністратор", Role = Role.Admin, PasswordHash = "!" });
+            new User { Email = "client@travel.local", FullName = "Тестовий Клієнт", Role = Role.Client, PasswordHash = HashPassword(DemoPasswords["client@travel.local"]) },
+            new User { Email = "manager@travel.local", FullName = "Тестовий Менеджер", Role = Role.Manager, PasswordHash = HashPassword(DemoPasswords["manager@travel.local"]) },
+            new User { Email = "admin@travel.local", FullName = "Тестовий Адміністратор", Role = Role.Admin, PasswordHash = HashPassword(DemoPasswords["admin@travel.local"]) });
 
         await context.SaveChangesAsync();
     }
+
+    /// <summary>Демо-паролі лише для середовища розробки.</summary>
+    private static readonly Dictionary<string, string> DemoPasswords = new()
+    {
+        ["client@travel.local"] = "Client123!",
+        ["manager@travel.local"] = "Manager123!",
+        ["admin@travel.local"] = "Admin123!"
+    };
+
+    /// <summary>У раніше заповненій базі демо-користувачі мають заглушку "!" замість хешу — замінюємо її.</summary>
+    private static async Task UpgradePlaceholderPasswordsAsync(TravelAgencyDbContext context)
+    {
+        var placeholders = await context.Users.Where(u => u.PasswordHash == "!").ToListAsync();
+
+        foreach (var user in placeholders)
+        {
+            if (DemoPasswords.TryGetValue(user.Email, out var password))
+                user.PasswordHash = HashPassword(password);
+        }
+
+        if (placeholders.Count > 0)
+            await context.SaveChangesAsync();
+    }
+
+    private static string HashPassword(string password) => BCrypt.Net.BCrypt.HashPassword(password);
 
     private static async Task SeedCatalogAsync(TravelAgencyDbContext context)
     {

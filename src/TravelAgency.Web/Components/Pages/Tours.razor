@@ -1,0 +1,211 @@
+@page "/tours"
+@inject ApiClient Api
+@inject NavigationManager Nav
+
+<PageTitle>Каталог турів — TravelAgency</PageTitle>
+
+<div class="container page">
+    <h1>Каталог турів</h1>
+
+    <button type="button" class="btn btn--outline btn--block filters-toggle" aria-expanded="@filtersOpen.ToString().ToLowerInvariant()" aria-controls="filters" @onclick="() => filtersOpen = !filtersOpen">
+        @(filtersOpen ? "Сховати фільтри" : "Показати фільтри")
+    </button>
+
+    <div class="catalog">
+        <aside id="filters" class="filters @(filtersOpen ? "is-open" : "")">
+            <EditForm Model="form" OnSubmit="ApplyAsync">
+                <h2 class="filters__title">Фільтри</h2>
+
+                <div class="field">
+                    <label for="f-country">Країна</label>
+                    <InputSelect id="f-country" @bind-Value="form.Country">
+                        <option value="">Усі країни</option>
+                        @foreach (var country in countries)
+                        {
+                            <option value="@country">@Fmt.Country(country)</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="field">
+                    <label for="f-hotel">Готель</label>
+                    <InputText id="f-hotel" @bind-Value="form.Hotel" placeholder="Назва готелю" />
+                </div>
+
+                <div class="field-row">
+                    <div class="field">
+                        <label for="f-from">Виліт від</label>
+                        <InputDate id="f-from" @bind-Value="form.From" />
+                    </div>
+                    <div class="field">
+                        <label for="f-to">Виліт до</label>
+                        <InputDate id="f-to" @bind-Value="form.To" />
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <div class="field">
+                        <label for="f-min">Ціна від, ₴</label>
+                        <InputNumber id="f-min" @bind-Value="form.MinPrice" />
+                    </div>
+                    <div class="field">
+                        <label for="f-max">Ціна до, ₴</label>
+                        <InputNumber id="f-max" @bind-Value="form.MaxPrice" />
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="f-meal">Харчування</label>
+                    <InputSelect id="f-meal" @bind-Value="form.Meal">
+                        <option value="">Будь-яке</option>
+                        @foreach (var meal in Enum.GetValues<MealPlan>())
+                        {
+                            <option value="@meal">@Fmt.Meal(meal)</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="filters__actions">
+                    <button type="button" class="btn btn--outline" @onclick="ResetAsync">Скинути</button>
+                    <button type="submit" class="btn btn--accent">Показати результати</button>
+                </div>
+            </EditForm>
+        </aside>
+
+        <section class="results" aria-live="polite">
+            @if (error is not null)
+            {
+                <div class="alert alert--error" role="alert">@error</div>
+            }
+            else if (loading)
+            {
+                <p class="state">Завантаження…</p>
+            }
+            else if (result is null || result.Items.Count == 0)
+            {
+                <div class="empty">
+                    <h2>Нічого не знайдено</h2>
+                    <p class="muted">Спробуйте змінити фільтри або скинути їх.</p>
+                    <button type="button" class="btn btn--primary" @onclick="ResetAsync">Скинути фільтри</button>
+                </div>
+            }
+            else
+            {
+                <p class="results__count">Знайдено вильотів: @result.TotalCount</p>
+                <div class="card-grid">
+                    @foreach (var item in result.Items)
+                    {
+                        <TourCard Item="item" />
+                    }
+                </div>
+
+                @if (result.TotalPages > 1)
+                {
+                    <nav class="pager" aria-label="Сторінки результатів">
+                        <button type="button" class="btn btn--outline btn--sm" disabled="@(result.Page <= 1)" @onclick="() => GoToPage(result.Page - 1)">← Назад</button>
+                        <span class="pager__info">Сторінка @result.Page з @result.TotalPages</span>
+                        <button type="button" class="btn btn--outline btn--sm" disabled="@(result.Page >= result.TotalPages)" @onclick="() => GoToPage(result.Page + 1)">Далі →</button>
+                    </nav>
+                }
+            }
+        </section>
+    </div>
+</div>
+
+@code {
+    private const int PageSize = 6;
+
+    [SupplyParameterFromQuery(Name = "country")] public string? CountryQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "hotel")] public string? HotelQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "from")] public DateTime? FromQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "to")] public DateTime? ToQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "min")] public decimal? MinQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "max")] public decimal? MaxQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "meal")] public string? MealQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "page")] public int? PageQuery { get; set; }
+
+    private TourFilterForm form = new();
+    private List<string> countries = [];
+    private PagedResponse<TourSearchItem>? result;
+    private string? error;
+    private bool loading = true;
+    private bool filtersOpen;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var tours = await Api.GetToursAsync();
+            countries = tours.Items
+                .Select(t => t.Country)
+                .Distinct()
+                .OrderBy(c => Fmt.Country(c))
+                .ToList();
+        }
+        catch (ApiException)
+        {
+            // список країн необов'язковий: помилку покаже сам пошук нижче
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        form = new TourFilterForm
+        {
+            Country = CountryQuery,
+            Hotel = HotelQuery,
+            From = FromQuery,
+            To = ToQuery,
+            MinPrice = MinQuery,
+            MaxPrice = MaxQuery,
+            Meal = Fmt.ParseMeal(MealQuery)
+        };
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        error = null;
+
+        try
+        {
+            var query = new TourSearchQuery(
+                form.Country,
+                form.From,
+                form.To,
+                form.Hotel,
+                form.MinPrice,
+                form.MaxPrice,
+                form.Meal,
+                Math.Max(1, PageQuery ?? 1),
+                PageSize);
+
+            result = await Api.SearchToursAsync(query);
+        }
+        catch (ApiException ex)
+        {
+            result = null;
+            error = ex.Message;
+        }
+
+        loading = false;
+    }
+
+    private Task ApplyAsync()
+    {
+        filtersOpen = false;
+        Nav.NavigateTo(form.ToQueryString());
+        return Task.CompletedTask;
+    }
+
+    private Task ResetAsync()
+    {
+        filtersOpen = false;
+        Nav.NavigateTo("/tours");
+        return Task.CompletedTask;
+    }
+
+    private void GoToPage(int page) => Nav.NavigateTo(form.ToQueryString(page));
+}
