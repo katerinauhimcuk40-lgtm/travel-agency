@@ -97,6 +97,42 @@ public sealed class ApiClient
     public Task PayBookingAsync(int bookingId, decimal amount) =>
         PostWithoutResultAsync($"api/bookings/{bookingId}/pay", new { amount });
 
+    // ----- Кабінет менеджера (потрібна роль Manager або Admin) -----
+
+    public Task<PagedResponse<BookingSummary>> GetCrmBookingsAsync(BookingStatus? status, string? customer, int page, int pageSize)
+    {
+        var inv = CultureInfo.InvariantCulture;
+        var parts = new List<string>();
+
+        if (status.HasValue)
+            parts.Add($"status={status.Value}");
+        if (!string.IsNullOrWhiteSpace(customer))
+            parts.Add($"customer={Uri.EscapeDataString(customer.Trim())}");
+        parts.Add($"page={page.ToString(inv)}");
+        parts.Add($"pageSize={pageSize.ToString(inv)}");
+
+        return GetAsync<PagedResponse<BookingSummary>>("api/crm/bookings?" + string.Join("&", parts), auth: true);
+    }
+
+    public Task<CrmBookingDetails> GetCrmBookingAsync(int bookingId) =>
+        GetAsync<CrmBookingDetails>($"api/crm/bookings/{bookingId}", auth: true);
+
+    public Task<PagedResponse<CustomerInfo>> GetCrmCustomersAsync(string? search, int page, int pageSize)
+    {
+        var inv = CultureInfo.InvariantCulture;
+        var parts = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(search))
+            parts.Add($"search={Uri.EscapeDataString(search.Trim())}");
+        parts.Add($"page={page.ToString(inv)}");
+        parts.Add($"pageSize={pageSize.ToString(inv)}");
+
+        return GetAsync<PagedResponse<CustomerInfo>>("api/crm/customers?" + string.Join("&", parts), auth: true);
+    }
+
+    public Task ConfirmBookingAsync(int bookingId) =>
+        PostWithoutResultAsync($"api/bookings/{bookingId}/confirm", body: null);
+
     // ----- Внутрішні методи -----
 
     private async Task<T> GetAsync<T>(string url, bool auth = false)

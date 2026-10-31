@@ -4,8 +4,19 @@
             <Authorizing>
                 <p class="state">Завантаження…</p>
             </Authorizing>
-            <NotAuthorized>
-                <RedirectToLogin />
+            <NotAuthorized Context="auth">
+                @if (auth.User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="container page">
+                        <h1>Недостатньо прав</h1>
+                        <p class="muted">Ця сторінка доступна лише співробітникам.</p>
+                        <a class="btn btn--primary" href="/">На головну</a>
+                    </div>
+                }
+                else
+                {
+                    <RedirectToLogin />
+                }
             </NotAuthorized>
         </AuthorizeRouteView>
         <FocusOnNavigate RouteData="routeData" Selector="h1" />

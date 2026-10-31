@@ -124,6 +124,23 @@ public static class Fmt
         _ => string.Empty
     };
 
+    public static string PaymentLabel(PaymentStatus status) => status switch
+    {
+        PaymentStatus.Pending => "Очікує",
+        PaymentStatus.Succeeded => "Сплачено",
+        PaymentStatus.Failed => "Помилка",
+        PaymentStatus.Refunded => "Повернено",
+        _ => status.ToString()
+    };
+
+    /// <summary>Дата й час у локальному часі сервера: «31.10.2026 10:15».</summary>
+    public static string DateTimeShort(DateTime value) =>
+        value.ToLocalTime().ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture);
+
+    /// <summary>Розбирає статус із рядка запиту; невідоме значення — null.</summary>
+    public static BookingStatus? ParseStatus(string? value) =>
+        Enum.TryParse<BookingStatus>(value, ignoreCase: true, out var status) && Enum.IsDefined(status) ? status : null;
+
     /// <summary>Форма слова за числом: 1 ніч, 2 ночі, 5 ночей.</summary>
     public static string Plural(int n, string one, string few, string many)
     {

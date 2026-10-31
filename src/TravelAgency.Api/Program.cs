@@ -39,6 +39,7 @@ builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<ITourCatalogService, TourCatalogService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICrmService, CrmService>();
 
 // JWT-автентифікація. Ключ для розробки — в appsettings.Development.json, у робочому середовищі — змінна Jwt__Key.
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));

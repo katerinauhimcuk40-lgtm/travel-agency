@@ -8,7 +8,7 @@ public class UnitOfWork : IUnitOfWork
 {
     private readonly TravelAgencyDbContext _context;
 
-    public IRepository<User> Users { get; }
+    public IUserRepository Users { get; }
     public ITourRepository Tours { get; }
     public IRepository<Hotel> Hotels { get; }
     public ITourGroupRepository TourGroups { get; }
@@ -19,7 +19,7 @@ public class UnitOfWork : IUnitOfWork
     public UnitOfWork(TravelAgencyDbContext context)
     {
         _context = context;
-        Users = new Repository<User>(_context);
+        Users = new UserRepository(_context);
         Tours = new TourRepository(_context);
         Hotels = new Repository<Hotel>(_context);
         TourGroups = new TourGroupRepository(_context);

@@ -267,6 +267,43 @@ input.invalid, .invalid { border-color: #B91C1C; }
 .badge--completed { background: #EEF2F6; color: #475569; }
 .badge--cancelled { background: #FEE2E2; color: #991B1B; }
 
+/* ---------- Кабінет менеджера (CRM) ---------- */
+.small { font-size: 13px; }
+.chips--filters { margin-bottom: 16px; }
+.chip--link.is-active { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+.toolbar { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; display: grid; gap: 0 16px; }
+.toolbar__actions { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 14px; }
+.toolbar__actions .btn { flex: 1; }
+
+.table-wrap { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.data-table th { text-align: left; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; padding: 12px 14px; background: #F8FAFC; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.data-table td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.data-table tbody tr:last-child td { border-bottom: none; }
+.data-table code { font-size: 14px; background: #F1F5F9; padding: 2px 6px; border-radius: 6px; }
+
+.detail-grid { display: grid; gap: 16px; margin-bottom: 16px; }
+.panel + .panel { margin-top: 16px; }
+.detail-grid .panel + .panel { margin-top: 0; }
+.panel__subtitle { margin-top: 20px; font-size: 17px; }
+.facts { display: grid; gap: 10px; margin: 0; }
+.facts > div { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 8px; }
+.facts dt { font-size: 13px; color: var(--muted); }
+.facts dd { margin: 0; font-weight: 500; overflow-wrap: anywhere; }
+
+/* На телефоні таблиця перетворюється на картки: підписи беруться з data-label */
+@media (max-width: 699px) {
+    .data-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .data-table, .data-table tbody, .data-table tr, .data-table td { display: block; width: 100%; }
+    .data-table tr { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+    .data-table tbody tr:last-child { border-bottom: none; }
+    .data-table td { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 8px; padding: 4px 0; border: none; }
+    .data-table td[data-label]::before { content: attr(data-label); font-size: 12px; font-weight: 600; color: var(--muted); }
+    .data-table td.data-table__action { display: block; padding-top: 8px; }
+    .data-table td.data-table__action .btn { width: 100%; }
+}
+
 /* ---------- Системні елементи Blazor ---------- */
 #blazor-error-ui {
     display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000;
@@ -278,6 +315,9 @@ input.invalid, .invalid { border-color: #B91C1C; }
 
 /* ---------- Планшет ---------- */
 @media (min-width: 700px) {
+    .toolbar { grid-template-columns: 220px minmax(0, 1fr) auto; align-items: end; }
+    .toolbar--search { grid-template-columns: minmax(0, 1fr) auto; }
+    .detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .features { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .hero__title { font-size: 36px; }

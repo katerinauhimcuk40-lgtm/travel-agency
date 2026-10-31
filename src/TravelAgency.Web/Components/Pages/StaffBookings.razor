@@ -1,0 +1,174 @@
+@page "/staff/bookings"
+@attribute [Authorize(Roles = "Manager,Admin")]
+@inject ApiClient Api
+@inject NavigationManager Nav
+
+<PageTitle>Заявки клієнтів — TravelAgency</PageTitle>
+
+<div class="container page">
+    <h1>Заявки клієнтів</h1>
+
+    <div class="chips chips--filters" role="group" aria-label="Швидкий фільтр за статусом">
+        <a class="chip chip--link @(filter.Status is null ? "is-active" : "")" href="/staff/bookings">Усі</a>
+        @foreach (var status in Enum.GetValues<BookingStatus>())
+        {
+            <a class="chip chip--link @(filter.Status == status ? "is-active" : "")" href="@($"/staff/bookings?status={status}")">@Fmt.Status(status)</a>
+        }
+    </div>
+
+    <EditForm Model="filter" OnSubmit="ApplyAsync" class="toolbar">
+        <div class="field">
+            <label for="st-status">Статус</label>
+            <InputSelect id="st-status" @bind-Value="filter.Status">
+                <option value="">Усі статуси</option>
+                @foreach (var status in Enum.GetValues<BookingStatus>())
+                {
+                    <option value="@status">@Fmt.Status(status)</option>
+                }
+            </InputSelect>
+        </div>
+        <div class="field">
+            <label for="st-customer">Клієнт (ім'я або пошта)</label>
+            <InputText id="st-customer" @bind-Value="filter.Customer" placeholder="Наприклад, client@travel.local" />
+        </div>
+        <div class="toolbar__actions">
+            <button type="button" class="btn btn--outline" @onclick="ResetAsync">Скинути</button>
+            <button type="submit" class="btn btn--primary">Знайти</button>
+        </div>
+    </EditForm>
+
+    @if (error is not null)
+    {
+        <div class="alert alert--error" role="alert">@error</div>
+    }
+    else if (loading)
+    {
+        <p class="state">Завантаження…</p>
+    }
+    else if (result is null || result.Items.Count == 0)
+    {
+        <div class="empty">
+            <h2>Заявок не знайдено</h2>
+            <p class="muted">Змініть фільтр або зачекайте на нові бронювання від клієнтів.</p>
+        </div>
+    }
+    else
+    {
+        <p class="results__count">Знайдено заявок: @result.TotalCount</p>
+
+        <div class="table-wrap">
+            <table class="data-table">
+                <caption class="visually-hidden">Список заявок клієнтів</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">№</th>
+                        <th scope="col">Клієнт</th>
+                        <th scope="col">Тур</th>
+                        <th scope="col">Виліт</th>
+                        <th scope="col">Туристи</th>
+                        <th scope="col">Сума</th>
+                        <th scope="col">Статус</th>
+                        <th scope="col"><span class="visually-hidden">Дії</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var b in result.Items)
+                    {
+                        <tr>
+                            <td data-label="№">№@b.Id</td>
+                            <td data-label="Клієнт">
+                                <div>@b.Customer.FullName</div>
+                                <div class="muted small">@b.Customer.Email</div>
+                            </td>
+                            <td data-label="Тур">
+                                <div>@b.TourTitle</div>
+                                <div class="muted small">@Fmt.Country(b.Country) · @b.GroupName</div>
+                            </td>
+                            <td data-label="Виліт">@Fmt.Date(b.DepartureDate)</td>
+                            <td data-label="Туристи">@b.PersonsCount</td>
+                            <td data-label="Сума">@Fmt.Money(b.TotalPrice)</td>
+                            <td data-label="Статус"><StatusBadge Status="b.Status" /></td>
+                            <td class="data-table__action">
+                                <a class="btn btn--outline btn--sm" href="@($"/staff/bookings/{b.Id}")">Відкрити</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (result.TotalPages > 1)
+        {
+            <nav class="pager" aria-label="Сторінки списку заявок">
+                <button type="button" class="btn btn--outline btn--sm" disabled="@(result.Page <= 1)" @onclick="() => GoToPage(result.Page - 1)">← Назад</button>
+                <span class="pager__info">Сторінка @result.Page з @result.TotalPages</span>
+                <button type="button" class="btn btn--outline btn--sm" disabled="@(result.Page >= result.TotalPages)" @onclick="() => GoToPage(result.Page + 1)">Далі →</button>
+            </nav>
+        }
+    }
+</div>
+
+@code {
+    private const int PageSize = 10;
+
+    [SupplyParameterFromQuery(Name = "status")] public string? StatusQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "q")] public string? CustomerQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "page")] public int? PageQuery { get; set; }
+
+    private BookingFilterForm filter = new();
+    private PagedResponse<BookingSummary>? result;
+    private string? error;
+    private bool loading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        filter = new BookingFilterForm
+        {
+            Status = Fmt.ParseStatus(StatusQuery),
+            Customer = CustomerQuery
+        };
+
+        loading = true;
+        error = null;
+
+        try
+        {
+            result = await Api.GetCrmBookingsAsync(filter.Status, filter.Customer, Math.Max(1, PageQuery ?? 1), PageSize);
+        }
+        catch (ApiException ex)
+        {
+            result = null;
+            error = ex.Message;
+        }
+
+        loading = false;
+    }
+
+    private string BuildUrl(int page)
+    {
+        var parts = new List<string>();
+
+        if (filter.Status.HasValue)
+            parts.Add($"status={filter.Status.Value}");
+        if (!string.IsNullOrWhiteSpace(filter.Customer))
+            parts.Add($"q={Uri.EscapeDataString(filter.Customer.Trim())}");
+        if (page > 1)
+            parts.Add($"page={page}");
+
+        return parts.Count == 0 ? "/staff/bookings" : "/staff/bookings?" + string.Join("&", parts);
+    }
+
+    private Task ApplyAsync()
+    {
+        Nav.NavigateTo(BuildUrl(1));
+        return Task.CompletedTask;
+    }
+
+    private Task ResetAsync()
+    {
+        Nav.NavigateTo("/staff/bookings");
+        return Task.CompletedTask;
+    }
+
+    private void GoToPage(int page) => Nav.NavigateTo(BuildUrl(page));
+}

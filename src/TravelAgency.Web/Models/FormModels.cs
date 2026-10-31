@@ -73,6 +73,13 @@ public class TourFilterForm
     }
 }
 
+/// <summary>Фільтр заявок у кабінеті менеджера.</summary>
+public class BookingFilterForm
+{
+    public BookingStatus? Status { get; set; }
+    public string? Customer { get; set; }
+}
+
 /// <summary>Один турист у формі бронювання (поля лише для інтерфейсу, помилки — після спроби відправити).</summary>
 public class TouristForm
 {

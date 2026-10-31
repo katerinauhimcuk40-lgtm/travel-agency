@@ -746,7 +746,9 @@ erDiagram
 | `POST /api/bookings/{id}/confirm` | UC-13 | Manager, Admin |
 | `POST /api/payments` | UC-10 | Client |
 | `GET /api/payments/booking/{bookingId}` | UC-14 | Manager, Admin |
-| `GET /api/customers`, `GET /api/customers/{id}` | UC-11 | Manager, Admin |
+| `GET /api/crm/bookings?status&customer&page&pageSize` (список заявок усіх клієнтів) | UC-13 | Manager, Admin |
+| `GET /api/crm/bookings/{id}` (заявка з клієнтом, туристами із замаскованим паспортом і оплатами) | UC-13, UC-14 | Manager, Admin |
+| `GET /api/crm/customers?search&page&pageSize` | UC-11 | Manager, Admin |
 | `GET /api/admin/users`, `PUT /api/admin/users/{id}/role`, `PUT /api/admin/users/{id}/status` | UC-16 | Admin |
 | `GET /api/admin/reports/sales?from&to` | UC-17 | Admin |
 | `GET /api/admin/settings`, `PUT /api/admin/settings/{key}` | UC-18 | Admin |
