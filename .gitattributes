@@ -1,0 +1,24 @@
+# Єдині закінчення рядків у репозиторії (прибирає попередження LF/CRLF на Windows)
+* text=auto
+
+*.cs      text eol=lf diff=csharp
+*.razor   text eol=lf
+*.cshtml  text eol=lf
+*.csproj  text eol=lf
+*.props   text eol=lf
+*.slnx    text eol=lf
+*.json    text eol=lf
+*.md      text eol=lf
+*.yml     text eol=lf
+*.yaml    text eol=lf
+*.css     text eol=lf
+*.js      text eol=lf
+*.html    text eol=lf
+*.ps1     text eol=lf
+*.sh      text eol=lf
+
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.ico  binary
+*.woff2 binary

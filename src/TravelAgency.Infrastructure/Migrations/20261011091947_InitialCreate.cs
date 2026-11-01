@@ -1,14 +1,12 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
-
+using System.Diagnostics.CodeAnalysis;
 #nullable disable
 
 namespace TravelAgency.Infrastructure.Migrations
 {
-    /// <inheritdoc />
     public partial class InitialCreate : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
