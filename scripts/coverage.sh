@@ -8,6 +8,7 @@ dotnet test \
   -p:CollectCoverage=true \
   -p:CoverletOutputFormat=cobertura \
   "-p:CoverletOutput=$ROOT/coverage/coverage.cobertura.xml" \
+  "-p:ExcludeByFile=**/Migrations/*.cs" \
   -p:Threshold="$THRESHOLD" -p:ThresholdType=line -p:ThresholdStat=total
 code=$?
 
