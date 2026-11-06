@@ -1,4 +1,5 @@
 using TravelAgency.Core.Enums;
+using TravelAgency.Core.States;
 
 namespace TravelAgency.Core.Entities;
 
@@ -22,35 +23,17 @@ public class Booking
 
     public void Confirm()
     {
-        if (Status != BookingStatus.New)
-            throw new InvalidOperationException($"Cannot confirm a booking in status {Status}.");
-
-        Status = BookingStatus.Confirmed;
+        Status = BookingStates.For(Status).Confirm();
         ConfirmedAt = DateTime.UtcNow;
     }
 
-    public void MarkPaid()
-    {
-        if (Status != BookingStatus.Confirmed)
-            throw new InvalidOperationException($"Cannot pay a booking in status {Status}. Booking must be confirmed first.");
-
-        Status = BookingStatus.Paid;
-    }
+    public void MarkPaid() => Status = BookingStates.For(Status).Pay();
 
     public void Cancel()
     {
-        if (Status != BookingStatus.New && Status != BookingStatus.Confirmed)
-            throw new InvalidOperationException($"Cannot cancel a booking in status {Status}.");
-
-        Status = BookingStatus.Cancelled;
+        Status = BookingStates.For(Status).Cancel();
         CancelledAt = DateTime.UtcNow;
     }
 
-    public void Complete()
-    {
-        if (Status != BookingStatus.Paid)
-            throw new InvalidOperationException($"Cannot complete a booking in status {Status}.");
-
-        Status = BookingStatus.Completed;
-    }
+    public void Complete() => Status = BookingStates.For(Status).Complete();
 }
