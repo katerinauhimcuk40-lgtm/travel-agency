@@ -1,6 +1,7 @@
 using TravelAgency.Core.Entities;
 using TravelAgency.Core.Interfaces;
 using TravelAgency.Core.Models;
+using TravelAgency.Infrastructure.Pricing;
 
 namespace TravelAgency.Infrastructure.Services;
 
@@ -8,11 +9,16 @@ public class BookingService : IBookingService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IEncryptionService _encryption;
+    private readonly ITicketPriceCalculator _priceCalculator;
 
-    public BookingService(IUnitOfWork unitOfWork, IEncryptionService encryption)
+    public BookingService(
+        IUnitOfWork unitOfWork,
+        IEncryptionService encryption,
+        ITicketPriceCalculator? priceCalculator = null)
     {
         _unitOfWork = unitOfWork;
         _encryption = encryption;
+        _priceCalculator = priceCalculator ?? new BaseTicketPriceCalculator();
     }
 
     public async Task<Booking> CreateBookingAsync(int userId, int tourGroupId, IReadOnlyList<TouristInfo> tourists)
@@ -43,7 +49,7 @@ public class BookingService : IBookingService
                 Gender = t.Gender,
                 Age = t.Age,
                 ChildrenInfo = t.ChildrenInfo,
-                TicketPrice = tour.BasePrice
+                TicketPrice = _priceCalculator.Calculate(t, tour, group)
             })
             .ToList();
 
