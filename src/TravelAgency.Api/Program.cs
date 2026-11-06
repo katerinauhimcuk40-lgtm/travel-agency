@@ -13,6 +13,7 @@ using TravelAgency.Infrastructure.Repositories;
 using TravelAgency.Infrastructure.Security;
 using TravelAgency.Infrastructure.Services;
 using TravelAgency.Infrastructure.Pricing;
+using TravelAgency.Infrastructure.Payments;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,6 +43,8 @@ builder.Services.AddSingleton<ITicketPriceCalculator>(_ =>
         new ChildDiscountDecorator(
             new BaseTicketPriceCalculator())));
 builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddSingleton<IPaymentGatewayFactory, PaymentGatewayFactory>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<ITourCatalogService, TourCatalogService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
