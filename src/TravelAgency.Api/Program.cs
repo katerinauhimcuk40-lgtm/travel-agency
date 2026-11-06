@@ -12,6 +12,7 @@ using TravelAgency.Infrastructure.Data;
 using TravelAgency.Infrastructure.Repositories;
 using TravelAgency.Infrastructure.Security;
 using TravelAgency.Infrastructure.Services;
+using TravelAgency.Infrastructure.Pricing;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +36,11 @@ var encryptionKey = builder.Configuration["Encryption:Key"]
 // Реєстрація репозиторіїв та бізнес-сервісів
 builder.Services.AddSingleton<IEncryptionService>(_ => new AesEncryptionService(encryptionKey));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+// Decorator: базова ціна → знижка дітям → знижка за раннє бронювання
+builder.Services.AddSingleton<ITicketPriceCalculator>(_ =>
+    new EarlyBookingDecorator(
+        new ChildDiscountDecorator(
+            new BaseTicketPriceCalculator())));
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<ITourCatalogService, TourCatalogService>();
